@@ -13,41 +13,41 @@
 // limitations under the License.
 
 #include <utility>
-#include "br2_fsm_bumpgo_cpp/BumpGoNode.hpp"
+#include "avoid_obstacle_cibernots/AvoidObstacleNode.hpp"
 
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace br2_fsm_bumpgo_cpp
+namespace avoid_obstacle_cibernots
 {
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
-BumpGoNode::BumpGoNode()
+AvoidObstacle::AvoidObstacle()
 : Node("bump_go"),
   state_(FORWARD)
 {
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
-    std::bind(&BumpGoNode::scan_callback, this, _1));
+    std::bind(&AvoidObstacle::scan_callback, this, _1));
 
   vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel", 10);
-  timer_ = create_wall_timer(50ms, std::bind(&BumpGoNode::control_cycle, this));
+  timer_ = create_wall_timer(50ms, std::bind(&AvoidObstacle::control_cycle, this));
 
   state_ts_ = now();
 }
 
 void
-BumpGoNode::scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg)
+AvoidObstacle::scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg)
 {
   last_scan_ = std::move(msg);
 }
 
 void
-BumpGoNode::control_cycle()
+AvoidObstacle::control_cycle()
 {
   // Do nothing until the first sensor read
   if (last_scan_ == nullptr) {
@@ -94,14 +94,14 @@ BumpGoNode::control_cycle()
 }
 
 void
-BumpGoNode::go_state(int new_state)
+AvoidObstacle::go_state(int new_state)
 {
   state_ = new_state;
   state_ts_ = now();
 }
 
 bool
-BumpGoNode::check_forward_2_back()
+AvoidObstacle::check_forward_2_back()
 {
   // going forward when deteting an obstacle
   // at 0.5 meters with the front laser read
@@ -110,7 +110,7 @@ BumpGoNode::check_forward_2_back()
 }
 
 bool
-BumpGoNode::check_forward_2_stop()
+AvoidObstacle::check_forward_2_stop()
 {
   // Stop if no sensor readings for 1 second
   auto elapsed = now() - rclcpp::Time(last_scan_->header.stamp);
@@ -118,7 +118,7 @@ BumpGoNode::check_forward_2_stop()
 }
 
 bool
-BumpGoNode::check_stop_2_forward()
+AvoidObstacle::check_stop_2_forward()
 {
   // Going forward if sensor readings are available
   // again
@@ -127,17 +127,17 @@ BumpGoNode::check_stop_2_forward()
 }
 
 bool
-BumpGoNode::check_back_2_turn()
+AvoidObstacle::check_back_2_turn()
 {
   // Going back for 2 seconds
   return (now() - state_ts_) > BACKING_TIME;
 }
 
 bool
-BumpGoNode::check_turn_2_forward()
+AvoidObstacle::check_turn_2_forward()
 {
   // Turning for 2 seconds
   return (now() - state_ts_) > TURNING_TIME;
 }
 
-}  // namespace br2_fsm_bumpgo_cpp
+}  // namespace avoid_obstacle_cibernots

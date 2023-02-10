@@ -18,8 +18,8 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-    bumpgo_cmd = Node(package='br2_fsm_bumpgo_cpp',
-                      executable='bumpgo',
+    avoidobs_cmd = Node(package='avoid_obstacle_cibernots',
+                      executable='avoid_obs',
                       output='screen',
                       parameters=[{
                         'use_sim_time': True
@@ -30,6 +30,6 @@ def generate_launch_description():
                       ])
 
     ld = LaunchDescription()
-    ld.add_action(bumpgo_cmd)
+    ld.add_action(avoidobs_cmd)
 
     return ld

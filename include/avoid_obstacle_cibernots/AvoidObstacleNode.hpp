@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef BR2_FSM_BUMPGO_CPP__BUMPGONODE_HPP_
-#define BR2_FSM_BUMPGO_CPP__BUMPGONODE_HPP_
+#ifndef AVOID_OBSTACLE_CIBERNOTS__AVOIDOBSTACLE_HPP_
+#define AVOID_OBSTACLE_CIBERNOTS__AVOIDOBSTACLE_HPP_
 
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 
-namespace br2_fsm_bumpgo_cpp
+namespace avoid_obstacle_cibernots
 {
 
 using namespace std::chrono_literals;  // NOLINT
 
-class BumpGoNode : public rclcpp::Node
+class AvoidObstacle : public rclcpp::Node
 {
 public:
-  BumpGoNode();
+  AvoidObstacle();
 
 private:
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
@@ -63,6 +63,6 @@ private:
   sensor_msgs::msg::LaserScan::UniquePtr last_scan_;
 };
 
-}  // namespace br2_fsm_bumpgo_cpp
+}  // namespace avoid_obstacle_cibernots
 
-#endif  // BR2_FSM_BUMPGO_CPP__BUMPGONODE_HPP_
+#endif  // AVOID_OBSTACLE_CIBERNOTS__AvoidObstacle_HPP_

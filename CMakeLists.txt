@@ -16,14 +16,14 @@ set(dependencies
 
 include_directories(include)
 
-add_executable(bumpgo
-  src/br2_fsm_bumpgo_cpp/BumpGoNode.cpp
-  src/bumpgo_main.cpp
+add_executable(avoid_obs
+  src/avoid_obstacle_cibernots/AvoidObstacleNode.cpp
+  src/avoidobs_main.cpp
 )
-ament_target_dependencies(bumpgo ${dependencies})
+ament_target_dependencies(avoid_obs ${dependencies})
 
 install(TARGETS
-  bumpgo
+  avoid_obs
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
