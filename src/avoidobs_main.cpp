@@ -14,15 +14,15 @@
 
 #include <memory>
 
-#include "br2_fsm_bumpgo_cpp/BumpGoNode.hpp"
+#include "avoid_obstacle_cibernots/AvoidObstacleNode.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto bumpgo_node = std::make_shared<br2_fsm_bumpgo_cpp::BumpGoNode>();
-  rclcpp::spin(bumpgo_node);
+  auto avoidobs_node = std::make_shared<avoid_obstacle_cibernots::AvoidObstacle>();
+  rclcpp::spin(avoidobs_node);
 
   rclcpp::shutdown();
 
