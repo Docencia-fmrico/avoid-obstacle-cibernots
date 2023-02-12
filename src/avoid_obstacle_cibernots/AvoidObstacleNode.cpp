@@ -1,4 +1,4 @@
-// Copyright 2021 Intelligent Robotics Lab
+// Copyright 2023 Intelligent Robotics Lab
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +27,9 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 AvoidObstacle::AvoidObstacle()
-: Node("bump_go"),
-  state_(FORWARD)
+: Node("avoid_obstacle"),
+  state_(FORWARD),
+  last_state_(FORWARD)
 {
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
@@ -56,39 +57,55 @@ AvoidObstacle::control_cycle()
 
   geometry_msgs::msg::Twist out_vel;
 
-  switch (state_) {
+  out_vel.angular.z = SPEED_ANGULAR;
+
+  if (check_turn_2_forward()) {
+    state_ts_ = now();
+    out_vel.linear.x = -SPEED_LINEAR;
+  }
+  std::cout << "Tiempo de giro" << time_turn << std::endl;
+  /*switch (state_) {
     case FORWARD:
       out_vel.linear.x = SPEED_LINEAR;
+      out_vel.angular.z = 0f;
 
       if (check_forward_2_stop()) {
+        out_vel.linear.x = 0f;
+        last_state_ = FORWARD;
         go_state(STOP);
       }
 
-      if (check_forward_2_back()) {
-        go_state(BACK);
+      // Si el ultimo estado fue turn, avanzar en arco durante x segundos
+      if (last_state_ == TURN && now() - state_ts_ < 3s) {
+        out_vel.linear.x = 0.8 * SPEED_ANGULAR*direction;
+        out_vel.angular.z = SPEED_ANGULAR*direction;
       }
-      break;
-    case BACK:
-      out_vel.linear.x = -SPEED_LINEAR;
 
-      if (check_back_2_turn()) {
+      if (check_forward_2_turn()) {
+        last_state_ = FORWARD;
         go_state(TURN);
       }
       break;
     case TURN:
-      out_vel.angular.z = SPEED_ANGULAR;
+      out_vel.linear.x = 0f;
+      out_vel.angular.z = SPEED_ANGULAR*direction;
 
+      // Una vez gira los 90º procede a avanzar en arco
       if (check_turn_2_forward()) {
+        last_state_ = TURN;
         go_state(FORWARD);
       }
 
       break;
     case STOP:
+      out_vel.linear.x = 0f;
+      out_vel.angular.z = 0f;
+
       if (check_stop_2_forward()) {
         go_state(FORWARD);
       }
       break;
-  }
+  }*/
 
   vel_pub_->publish(out_vel);
 }
@@ -101,10 +118,12 @@ AvoidObstacle::go_state(int new_state)
 }
 
 bool
-AvoidObstacle::check_forward_2_back()
+AvoidObstacle::check_forward_2_turn()
 {
-  // going forward when deteting an obstacle
-  // at 0.5 meters with the front laser read
+  // Implementar lógica del laser para detectar objeto
+  // en un abanico de 120 grados o menos.
+  // Actualizar la variable direction en funcion del lado
+  // en el que se detecte el objeto.
   size_t pos = last_scan_->ranges.size() / 2;
   return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;
 }
@@ -127,16 +146,16 @@ AvoidObstacle::check_stop_2_forward()
 }
 
 bool
-AvoidObstacle::check_back_2_turn()
-{
-  // Going back for 2 seconds
-  return (now() - state_ts_) > BACKING_TIME;
-}
-
-bool
 AvoidObstacle::check_turn_2_forward()
 {
-  // Turning for 2 seconds
+  // Una Opcion
+  // En topic /odom, obtenemos orientacion y giramos 90º
+  // Pos inicial, nav_msgs/msg/Odometry(tipo de mensajes)
+  /*  x: 4.838973292918089e-05
+      y: -0.006673698700173976
+      z: -0.007270319308134201
+      w: 0.9999512997447679*/
+    
   return (now() - state_ts_) > TURNING_TIME;
 }
 
