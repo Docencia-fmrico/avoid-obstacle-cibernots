@@ -36,7 +36,7 @@ AvoidObstacle::AvoidObstacle()
 
   vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel", 10);
   timer_ = create_wall_timer(50ms, std::bind(&AvoidObstacle::control_cycle, this));
-
+  
   state_ts_ = now();
 }
 
@@ -64,19 +64,12 @@ AvoidObstacle::control_cycle()
         go_state(STOP);
       }
 
-      if (check_forward_2_back()) {
-        go_state(BACK);
-      }
-      break;
-    case BACK:
-      out_vel.linear.x = -SPEED_LINEAR;
-
-      if (check_back_2_turn()) {
+      if (check_forward_2_turn()) {
         go_state(TURN);
       }
       break;
     case TURN:
-      out_vel.angular.z = SPEED_ANGULAR;
+      out_vel.angular.z = SPEED_ANGULAR*side_;
 
       if (check_turn_2_forward()) {
         go_state(FORWARD);
@@ -100,6 +93,7 @@ AvoidObstacle::go_state(int new_state)
   state_ts_ = now();
 }
 
+/*
 bool
 AvoidObstacle::check_forward_2_back()
 {
@@ -107,6 +101,44 @@ AvoidObstacle::check_forward_2_back()
   // at 0.5 meters with the front laser read
   size_t pos = last_scan_->ranges.size() / 2;
   return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;
+}
+*/
+
+bool
+AvoidObstacle::check_forward_2_turn()
+{
+  bool detected_=false;
+
+  for(int j = 0; j < min_pos; j++){
+    if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+      detected_ = true;
+      object_position_ = j;
+      break;
+    }
+  }
+
+  if(!detected_){
+    for(int j = max_pos; j < last_scan_->ranges.size(); j++){
+      if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+        detected_ = true;
+        object_position_ = j;
+        break;
+      }
+    }
+  }
+
+  if( max_pos < object_position_ && object_position_ < LONG_MED)
+  {
+    /*state_ = TURNING_RIGHT;*/
+    side_ = -1;
+  }
+  else
+  {
+    side_ = 1;
+    /*state_ = TURNING_LEFT;*/
+  }
+
+  return detected_;
 }
 
 bool
