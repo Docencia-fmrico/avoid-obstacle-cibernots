@@ -44,6 +44,7 @@ private:
   
   int side_;
   int object_position_;
+  int laser_dist;
 
   static const int FORWARD = 0;
   static const int BACK = 1;
@@ -58,7 +59,7 @@ private:
   bool check_back_2_turn();
   bool check_turn_2_forward();
   bool check_stop_2_forward();
-
+  void dist_med_obstacles(); 
   const rclcpp::Duration TURNING_TIME {2s};
   const rclcpp::Duration BACKING_TIME {2s};
   const rclcpp::Duration SCAN_TIMEOUT {1s};
