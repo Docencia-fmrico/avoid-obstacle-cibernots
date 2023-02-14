@@ -44,6 +44,7 @@ private:
   int state_;
   int last_state_;
   rclcpp::Time state_ts_;
+  rclcpp::Time reorentation_t;
 
   void go_state(int new_state);
   bool check_forward_2_turn();
@@ -51,14 +52,14 @@ private:
   bool check_turn_2_forward();
   bool check_stop_2_forward();
 
-  static constexpr float SPEED_LINEAR = 1.5f;
-  static constexpr float SPEED_ANGULAR = 0.7f;
+  static constexpr float SPEED_LINEAR = 0.5f;
+  static constexpr float SPEED_ANGULAR = 0.2f;
   static constexpr float OBSTACLE_DISTANCE = 1.0f;
 
-  //const rclcpp::Duration TURNING_TIME {2s};
   double time_turn = M_PI_2/SPEED_ANGULAR;
 
   rclcpp::Duration TURNING_TIME = rclcpp::Duration::from_seconds(time_turn);
+  rclcpp::Duration REORENTATION_TIME = rclcpp::Duration::from_seconds(M_PI_4/SPEED_ANGULAR);
   const rclcpp::Duration SCAN_TIMEOUT {1s};
 
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
@@ -67,7 +68,12 @@ private:
 
   sensor_msgs::msg::LaserScan::UniquePtr last_scan_;
 
-  int direction = 1; // Valor 1 o -1 para indicar el sentido de giro
+  int side_ = 1; // 1 o -1 para indicar el sentido de giro
+
+  const double HALF_CIRCUMFERENCE = M_PI * OBSTACLE_DISTANCE;
+  double linear_distance = 0.0;
+
+  bool avoided = false;
 };
 
 }  // namespace avoid_obstacle_cibernots

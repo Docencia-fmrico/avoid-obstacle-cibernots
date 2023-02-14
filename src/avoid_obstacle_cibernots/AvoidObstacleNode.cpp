@@ -57,55 +57,71 @@ AvoidObstacle::control_cycle()
 
   geometry_msgs::msg::Twist out_vel;
 
-  out_vel.angular.z = SPEED_ANGULAR;
-
-  if (check_turn_2_forward()) {
-    state_ts_ = now();
-    out_vel.linear.x = -SPEED_LINEAR;
-  }
-  std::cout << "Tiempo de giro" << time_turn << std::endl;
-  /*switch (state_) {
+  switch (state_) {
     case FORWARD:
       out_vel.linear.x = SPEED_LINEAR;
-      out_vel.angular.z = 0f;
+      out_vel.angular.z = 0.0f;
 
       if (check_forward_2_stop()) {
-        out_vel.linear.x = 0f;
+        out_vel.linear.x = 0.0f;
+        RCLCPP_INFO(get_logger(), "FORWARD -> STOP");
         last_state_ = FORWARD;
         go_state(STOP);
       }
 
-      // Si el ultimo estado fue turn, avanzar en arco durante x segundos
-      if (last_state_ == TURN && now() - state_ts_ < 3s) {
-        out_vel.linear.x = 0.8 * SPEED_ANGULAR*direction;
-        out_vel.angular.z = SPEED_ANGULAR*direction;
+      /*Revisar si ponerlo como estado, ajustar angulo de orientacion,
+      y ver si es necesario*/
+      if (last_state_ == TURN && avoided) {
+        RCLCPP_INFO(get_logger(), "REORENTATION");
+        out_vel.linear.x = 0.0f;
+        out_vel.angular.z = SPEED_ANGULAR * side_;
+        if ((now() - reorentation_t) > REORENTATION_TIME) {
+          avoided = false;
+        }
+      }
+      //////////////////////////
+
+      // Si el ultimo estado fue TURN, avanzar en arco
+      if (last_state_ == TURN && linear_distance < HALF_CIRCUMFERENCE) {
+        RCLCPP_INFO(get_logger(), "AVANZO EN ARCO: %f, linear_distance = %f", HALF_CIRCUMFERENCE, linear_distance);
+        linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
+        out_vel.angular.z = -SPEED_ANGULAR * side_;
+        if (linear_distance >= HALF_CIRCUMFERENCE) {
+          reorentation_t = now();
+          avoided = true;
+        }
       }
 
       if (check_forward_2_turn()) {
+        RCLCPP_INFO(get_logger(),"FORWARD -> TURNING");
+        linear_distance = 0.0;
         last_state_ = FORWARD;
         go_state(TURN);
       }
+
       break;
     case TURN:
-      out_vel.linear.x = 0f;
-      out_vel.angular.z = SPEED_ANGULAR*direction;
+      out_vel.linear.x = 0.0f;
+      out_vel.angular.z = SPEED_ANGULAR * side_;
 
       // Una vez gira los 90º procede a avanzar en arco
       if (check_turn_2_forward()) {
+        RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
         last_state_ = TURN;
         go_state(FORWARD);
       }
 
       break;
     case STOP:
-      out_vel.linear.x = 0f;
-      out_vel.angular.z = 0f;
+      out_vel.linear.x = 0.0f;
+      out_vel.angular.z = 0.0f;
 
       if (check_stop_2_forward()) {
+        RCLCPP_INFO(get_logger(),"STOP -> FORWARD");
         go_state(FORWARD);
       }
       break;
-  }*/
+  }
 
   vel_pub_->publish(out_vel);
 }
@@ -122,10 +138,12 @@ AvoidObstacle::check_forward_2_turn()
 {
   // Implementar lógica del laser para detectar objeto
   // en un abanico de 120 grados o menos.
-  // Actualizar la variable direction en funcion del lado
+  // Actualizar la variable side_ en funcion del lado
   // en el que se detecte el objeto.
-  size_t pos = last_scan_->ranges.size() / 2;
-  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;
+  /*size_t pos = last_scan_->ranges.size() / 2;
+  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;*/
+  auto elapsed = now() - state_ts_;
+  return elapsed > 10s;
 }
 
 bool
@@ -148,14 +166,6 @@ AvoidObstacle::check_stop_2_forward()
 bool
 AvoidObstacle::check_turn_2_forward()
 {
-  // Una Opcion
-  // En topic /odom, obtenemos orientacion y giramos 90º
-  // Pos inicial, nav_msgs/msg/Odometry(tipo de mensajes)
-  /*  x: 4.838973292918089e-05
-      y: -0.006673698700173976
-      z: -0.007270319308134201
-      w: 0.9999512997447679*/
-    
   return (now() - state_ts_) > TURNING_TIME;
 }
 

@@ -25,7 +25,7 @@ def generate_launch_description():
                         'use_sim_time': True
                       }],
                       remappings=[
-                        ('input_scan', '/scan_raw'),
+                        ('input_scan', '/scan'),
                         ('output_vel', '/cmd_vel')
                       ])
 
