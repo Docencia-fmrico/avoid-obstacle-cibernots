@@ -97,13 +97,23 @@ void
 AvoidObstacle::dist_med_obstacles()
 {
   int n = 0;
-  for(int j = 0; j < LONG_MED; j++){
+
+  /* recorremos los valores del laser de 0-45º */
+  for(int j = 0; j < min_pos; j++){
     if((last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
       laser_dist += last_scan_->ranges[j];
       n++;
     }
   }
-  laser_dist = 10/(laser_dist/n);
+  /* recorremos los valores del laser de 315-360º*/
+  for(int j = max_pos; j < LONG_MED; j++){
+    if((last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+      laser_dist += last_scan_->ranges[j];
+      n++;
+    }
+  }
+
+  laser_dist = laser_dist/n;
 }
 
 bool
