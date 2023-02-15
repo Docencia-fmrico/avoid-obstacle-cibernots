@@ -38,6 +38,17 @@ private:
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
   void control_cycle();
 
+  float DISTANCE_DETECT = 0.5;
+  int LONG_MED = 760; // Longitud del array de medidas del laser
+
+  float vuelta = 360;
+
+  int min_pos = 45*(LONG_MED/vuelta);
+  int max_pos = 315*(LONG_MED/vuelta);
+  
+  int side_;
+  int object_position_;
+
   static const int FORWARD = 0;
   static const int TURN = 1;
   static const int STOP = 2;
