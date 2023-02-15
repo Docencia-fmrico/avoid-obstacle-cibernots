@@ -1,4 +1,4 @@
-# Copyright 2021 Intelligent Robotics Lab
+# Copyright 2023 Intelligent Robotics Lab
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ def generate_launch_description():
                         'use_sim_time': True
                       }],
                       remappings=[
-                        ('input_scan', '/scan_raw'),
-                        ('output_vel', '/nav_vel')
+                        ('input_scan', '/scan'),
+                        ('output_vel', '/cmd_vel')
                       ])
 
     ld = LaunchDescription()
