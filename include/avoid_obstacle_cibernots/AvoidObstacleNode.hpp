@@ -44,7 +44,7 @@ private:
   
   int side_;
   int object_position_;
-  int laser_dist;
+  int laser_dist_;
 
   static const int FORWARD = 0;
   static const int BACK = 1;

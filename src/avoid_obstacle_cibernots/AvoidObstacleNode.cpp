@@ -93,16 +93,29 @@ AvoidObstacle::go_state(int new_state)
   state_ts_ = now();
 }
 
-/*
-bool
-AvoidObstacle::check_forward_2_back()
+void
+AvoidObstacle::dist_med_obstacles()
 {
-  // going forward when deteting an obstacle
-  // at 0.5 meters with the front laser read
-  size_t pos = last_scan_->ranges.size() / 2;
-  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;
+  int n = 0;
+
+  /* recorremos los valores del laser de 0-45º */
+  for(int j = 0; j < min_pos; j++){
+    if((last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+      laser_dist_ += last_scan_->ranges[j];
+      n++;
+    }
+  }
+  /* recorremos los valores del laser de 315-360º*/
+  for(int j = max_pos; j < LONG_MED; j++){
+    if((last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+      laser_dist_ += last_scan_->ranges[j];
+      n++;
+    }
+  }
+
+  laser_dist_ = laser_dist_/n;
 }
-*/
+
 
 bool
 AvoidObstacle::check_forward_2_turn()
