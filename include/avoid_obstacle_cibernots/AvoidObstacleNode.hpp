@@ -1,4 +1,4 @@
-// Copyright 2021 Intelligent Robotics Lab
+// Copyright 2023 Intelligent Robotics Lab
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
 
 #ifndef AVOID_OBSTACLE_CIBERNOTS__AVOIDOBSTACLE_HPP_
 #define AVOID_OBSTACLE_CIBERNOTS__AVOIDOBSTACLE_HPP_
+
+#include <math.h>
+
+#include <chrono>
 
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -35,32 +39,41 @@ private:
   void control_cycle();
 
   static const int FORWARD = 0;
-  static const int BACK = 1;
-  static const int TURN = 2;
-  static const int STOP = 3;
+  static const int TURN = 1;
+  static const int STOP = 2;
   int state_;
+  int last_state_;
   rclcpp::Time state_ts_;
+  rclcpp::Time reorentation_t;
 
   void go_state(int new_state);
-  bool check_forward_2_back();
+  bool check_forward_2_turn();
   bool check_forward_2_stop();
-  bool check_back_2_turn();
   bool check_turn_2_forward();
   bool check_stop_2_forward();
 
-  const rclcpp::Duration TURNING_TIME {2s};
-  const rclcpp::Duration BACKING_TIME {2s};
-  const rclcpp::Duration SCAN_TIMEOUT {1s};
-
-  static constexpr float SPEED_LINEAR = 0.3f;
-  static constexpr float SPEED_ANGULAR = 0.3f;
+  static constexpr float SPEED_LINEAR = 0.5f;
+  static constexpr float SPEED_ANGULAR = 0.2f;
   static constexpr float OBSTACLE_DISTANCE = 1.0f;
+
+  double time_turn = M_PI_2/SPEED_ANGULAR;
+
+  rclcpp::Duration TURNING_TIME = rclcpp::Duration::from_seconds(time_turn);
+  rclcpp::Duration REORENTATION_TIME = rclcpp::Duration::from_seconds(M_PI_4/SPEED_ANGULAR);
+  const rclcpp::Duration SCAN_TIMEOUT {1s};
 
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   sensor_msgs::msg::LaserScan::UniquePtr last_scan_;
+
+  int side_ = 1; // 1 o -1 para indicar el sentido de giro
+
+  const double HALF_CIRCUMFERENCE = M_PI * OBSTACLE_DISTANCE;
+  double linear_distance = 0.0;
+
+  bool avoided = false;
 };
 
 }  // namespace avoid_obstacle_cibernots

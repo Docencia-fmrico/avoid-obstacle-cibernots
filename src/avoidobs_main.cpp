@@ -1,4 +1,4 @@
-// Copyright 2021 Intelligent Robotics Lab
+// Copyright 2023 Intelligent Robotics Lab
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
 
-  auto avoidobs_node = std::make_shared<avoid_obstacle_cibernots::AvoidObstacle>();
-  rclcpp::spin(avoidobs_node);
+  auto avoid_obs_node = std::make_shared<avoid_obstacle_cibernots::AvoidObstacle>();
+  rclcpp::spin(avoid_obs_node);
 
   rclcpp::shutdown();
 

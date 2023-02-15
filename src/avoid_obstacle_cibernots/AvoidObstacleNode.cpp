@@ -1,4 +1,4 @@
-// Copyright 2021 Intelligent Robotics Lab
+// Copyright 2023 Intelligent Robotics Lab
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +27,9 @@ using namespace std::chrono_literals;
 using std::placeholders::_1;
 
 AvoidObstacle::AvoidObstacle()
-: Node("bump_go"),
-  state_(FORWARD)
+: Node("avoid_obstacle"),
+  state_(FORWARD),
+  last_state_(FORWARD)
 {
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
@@ -59,32 +60,64 @@ AvoidObstacle::control_cycle()
   switch (state_) {
     case FORWARD:
       out_vel.linear.x = SPEED_LINEAR;
+      out_vel.angular.z = 0.0f;
 
       if (check_forward_2_stop()) {
+        out_vel.linear.x = 0.0f;
+        RCLCPP_INFO(get_logger(), "FORWARD -> STOP");
+        last_state_ = FORWARD;
         go_state(STOP);
       }
 
-      if (check_forward_2_back()) {
-        go_state(BACK);
+      /*Revisar si ponerlo como estado, ajustar angulo de orientacion,
+      y ver si es necesario*/
+      if (last_state_ == TURN && avoided) {
+        RCLCPP_INFO(get_logger(), "REORENTATION");
+        out_vel.linear.x = 0.0f;
+        out_vel.angular.z = SPEED_ANGULAR * side_;
+        if ((now() - reorentation_t) > REORENTATION_TIME) {
+          avoided = false;
+        }
       }
-      break;
-    case BACK:
-      out_vel.linear.x = -SPEED_LINEAR;
+      //////////////////////////
 
-      if (check_back_2_turn()) {
+      // Si el ultimo estado fue TURN, avanzar en arco
+      if (last_state_ == TURN && linear_distance < HALF_CIRCUMFERENCE) {
+        RCLCPP_INFO(get_logger(), "AVANZO EN ARCO: %f, linear_distance = %f", HALF_CIRCUMFERENCE, linear_distance);
+        linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
+        out_vel.angular.z = -SPEED_ANGULAR * side_;
+        if (linear_distance >= HALF_CIRCUMFERENCE) {
+          reorentation_t = now();
+          avoided = true;
+        }
+      }
+
+      if (check_forward_2_turn()) {
+        RCLCPP_INFO(get_logger(),"FORWARD -> TURNING");
+        linear_distance = 0.0;
+        last_state_ = FORWARD;
         go_state(TURN);
       }
+
       break;
     case TURN:
-      out_vel.angular.z = SPEED_ANGULAR;
+      out_vel.linear.x = 0.0f;
+      out_vel.angular.z = SPEED_ANGULAR * side_;
 
+      // Una vez gira los 90º procede a avanzar en arco
       if (check_turn_2_forward()) {
+        RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
+        last_state_ = TURN;
         go_state(FORWARD);
       }
 
       break;
     case STOP:
+      out_vel.linear.x = 0.0f;
+      out_vel.angular.z = 0.0f;
+
       if (check_stop_2_forward()) {
+        RCLCPP_INFO(get_logger(),"STOP -> FORWARD");
         go_state(FORWARD);
       }
       break;
@@ -101,12 +134,16 @@ AvoidObstacle::go_state(int new_state)
 }
 
 bool
-AvoidObstacle::check_forward_2_back()
+AvoidObstacle::check_forward_2_turn()
 {
-  // going forward when deteting an obstacle
-  // at 0.5 meters with the front laser read
-  size_t pos = last_scan_->ranges.size() / 2;
-  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;
+  // Implementar lógica del laser para detectar objeto
+  // en un abanico de 120 grados o menos.
+  // Actualizar la variable side_ en funcion del lado
+  // en el que se detecte el objeto.
+  /*size_t pos = last_scan_->ranges.size() / 2;
+  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;*/
+  auto elapsed = now() - state_ts_;
+  return elapsed > 10s;
 }
 
 bool
@@ -127,16 +164,8 @@ AvoidObstacle::check_stop_2_forward()
 }
 
 bool
-AvoidObstacle::check_back_2_turn()
-{
-  // Going back for 2 seconds
-  return (now() - state_ts_) > BACKING_TIME;
-}
-
-bool
 AvoidObstacle::check_turn_2_forward()
 {
-  // Turning for 2 seconds
   return (now() - state_ts_) > TURNING_TIME;
 }
 
