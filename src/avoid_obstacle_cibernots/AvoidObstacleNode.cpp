@@ -154,7 +154,7 @@ AvoidObstacle::check_forward_2_turn()
   bool detected_=false;
 
   for(int j = 0; j < min_pos; j++){
-    if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+    if(last_scan_->ranges[j] < DISTANCE_DETECT && last_scan_->ranges[j] > last_scan_->range_min){
       detected_ = true;
       object_position_ = j;
       break;
@@ -163,7 +163,7 @@ AvoidObstacle::check_forward_2_turn()
 
   if(!detected_){
     for(int j = max_pos; j < last_scan_->ranges.size(); j++){
-      if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+      if(last_scan_->ranges[j] < DISTANCE_DETECT && last_scan_->ranges[j] > last_scan_->range_min){
         detected_ = true;
         object_position_ = j;
         break;
