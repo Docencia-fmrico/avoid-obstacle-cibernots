@@ -106,10 +106,10 @@ AvoidObstacle::control_cycle()
       out_vel.angular.z = SPEED_ANGULAR * side_;
       RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez gira los 90º procede a avanzar en arco
-      if (check_turn_2_forward()) {
+      if (check_turn_2_reor()) {
         RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
         last_state_ = TURN;
-        go_state(FORWARD);
+        go_state(REOR);
       }
 
       break;
@@ -122,6 +122,18 @@ AvoidObstacle::control_cycle()
         go_state(FORWARD);
       }
       break;
+
+    case REOR:
+      out_vel.linear.x = 0.0f;
+      out_vel.angular.z = -SPEED_ANGULAR * side_;
+      RCLCPP_INFO(get_logger(), "REOR: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
+      // Una vez se reorienta procede a avanzar
+      if (check_reor_2_forward()) {
+        RCLCPP_INFO(get_logger(),"REORIENTATING -> FORWARD");
+        last_state_ = REOR;
+        go_state(FORWARD);
+        break;
+      }
   }
 
   vel_pub_->publish(out_vel);
@@ -140,7 +152,7 @@ AvoidObstacle::check_forward_2_turn()
   bool detected_=false;
 
   for(int j = 0; j < min_pos; j++){
-    if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+    if(last_scan_->ranges[j] < OBSTACLE_DISTANCE && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
       detected_ = true;
       object_position_ = j;
       break;
@@ -149,7 +161,7 @@ AvoidObstacle::check_forward_2_turn()
 
   if(!detected_){
     for(int j = max_pos; j < last_scan_->ranges.size(); j++){
-      if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+      if(last_scan_->ranges[j] < OBSTACLE_DISTANCE && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
         detected_ = true;
         object_position_ = j;
         break;
@@ -189,9 +201,16 @@ AvoidObstacle::check_stop_2_forward()
 }
 
 bool
-AvoidObstacle::check_turn_2_forward()
+AvoidObstacle::check_turn_2_reor()
 {
   return (now() - state_ts_) > TURNING_TIME;
 }
+
+bool
+AvoidObstacle::check_reor_2_forward()
+{
+  return (now() - state_ts_) > REORENTATION_TIME;
+}
+
 
 }  // namespace avoid_obstacle_cibernots
