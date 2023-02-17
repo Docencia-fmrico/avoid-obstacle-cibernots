@@ -137,19 +137,21 @@ AvoidObstacle::go_state(int new_state)
 bool
 AvoidObstacle::check_forward_2_turn()
 {
-  bool detected_=false;
 
-  for(int j = 0; j < min_pos; j++){
-    if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+  bool detected_ = false;
+
+
+  for (int j = 0; j < min_pos; j++) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
       detected_ = true;
       object_position_ = j;
       break;
     }
   }
 
-  if(!detected_){
-    for(int j = max_pos; j < last_scan_->ranges.size(); j++){
-      if(last_scan_->ranges[j] < DISTANCE_DETECT && (last_scan_->ranges[j] < last_scan_->range_max) && (last_scan_->ranges[j] > last_scan_->range_min)){
+  if (!detected_) {
+    for (int j = max_pos; j < last_scan_->ranges.size(); j++) {
+      if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
         detected_ = true;
         object_position_ = j;
         break;
@@ -157,15 +159,15 @@ AvoidObstacle::check_forward_2_turn()
     }
   }
 
-  if( max_pos < object_position_ && object_position_ < LONG_MED)
-  {
-    /*state_ = TURNING_RIGHT;*/
-    side_ = 1;
-  }
-  else
-  {
+
+  if (max_pos < object_position_) {
+    /*TURNING_LEFT*/
     side_ = -1;
-    /*state_ = TURNING_LEFT;*/
+  }
+  else {
+    side_ = 1;
+    /*TURNING_RIGTH;*/
+
   }
 
   return detected_;
