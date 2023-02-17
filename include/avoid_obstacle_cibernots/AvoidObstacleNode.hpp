@@ -38,19 +38,15 @@ private:
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
   void control_cycle();
 
-  float DISTANCE_DETECT = 0.5;
-  int LONG_MED = 360; // Longitud del array de medidas del laser
-
-  float vuelta = 360;
-
-  int min_pos = 45*(LONG_MED/vuelta);
-  int max_pos = 315*(LONG_MED/vuelta);
+  int min_pos = 45;
+  int max_pos = 315;
   
   int object_position_;
 
   static const int FORWARD = 0;
   static const int TURN = 1;
   static const int STOP = 2;
+  static const int REOR = 3;
   int state_;
   int last_state_;
   rclcpp::Time state_ts_;
@@ -59,8 +55,9 @@ private:
   void go_state(int new_state);
   bool check_forward_2_turn();
   bool check_forward_2_stop();
-  bool check_turn_2_forward();
+  bool check_turn_2_reor();
   bool check_stop_2_forward();
+  bool check_reor_2_forward();
 
   static constexpr float SPEED_LINEAR = 0.25f;
   static constexpr float SPEED_ANGULAR = 0.5f;
@@ -80,7 +77,7 @@ private:
 
   int side_ = 1; // 1 o -1 para indicar el sentido de giro
 
-  const double HALF_CIRCUMFERENCE = M_PI * OBSTACLE_DISTANCE;
+  const double HALF_CIRCUMFERENCE = M_PI * 0.6;
   double linear_distance = 0.0;
 
   bool avoided = false;
