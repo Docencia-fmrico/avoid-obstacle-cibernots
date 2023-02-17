@@ -62,8 +62,8 @@ private:
   bool check_turn_2_forward();
   bool check_stop_2_forward();
 
-  static constexpr float SPEED_LINEAR = 0.5f;
-  static constexpr float SPEED_ANGULAR = 0.2f;
+  static constexpr float SPEED_LINEAR = 0.25f;
+  static constexpr float SPEED_ANGULAR = 0.5f;
   static constexpr float OBSTACLE_DISTANCE = 1.0f;
 
   double time_turn = M_PI_2/SPEED_ANGULAR;

@@ -71,14 +71,14 @@ AvoidObstacle::control_cycle()
 
       /*Revisar si ponerlo como estado, ajustar angulo de orientacion,
       y ver si es necesario*/
-      if (last_state_ == TURN && avoided) {
+      /*if (last_state_ == TURN && avoided) {
         RCLCPP_INFO(get_logger(), "REORENTATION");
         out_vel.linear.x = 0.0f;
         out_vel.angular.z = SPEED_ANGULAR * side_;
         if ((now() - reorentation_t) > REORENTATION_TIME) {
           avoided = false;
         }
-      }
+      }*/
       //////////////////////////
 
       // Si el ultimo estado fue TURN, avanzar en arco
@@ -97,13 +97,14 @@ AvoidObstacle::control_cycle()
         linear_distance = 0.0;
         last_state_ = FORWARD;
         go_state(TURN);
+        RCLCPP_INFO(get_logger(), "CAMBIO: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       }
 
       break;
     case TURN:
       out_vel.linear.x = 0.0f;
       out_vel.angular.z = SPEED_ANGULAR * side_;
-
+      RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez gira los 90º procede a avanzar en arco
       if (check_turn_2_forward()) {
         RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
@@ -136,7 +137,9 @@ AvoidObstacle::go_state(int new_state)
 bool
 AvoidObstacle::check_forward_2_turn()
 {
+
   bool detected_ = false;
+
 
   for (int j = 0; j < min_pos; j++) {
     if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
@@ -156,6 +159,7 @@ AvoidObstacle::check_forward_2_turn()
     }
   }
 
+
   if (max_pos < object_position_) {
     /*TURNING_LEFT*/
     side_ = -1;
@@ -163,6 +167,7 @@ AvoidObstacle::check_forward_2_turn()
   else {
     side_ = 1;
     /*TURNING_RIGTH;*/
+
   }
 
   return detected_;
