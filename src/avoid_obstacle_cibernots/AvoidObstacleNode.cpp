@@ -71,14 +71,14 @@ AvoidObstacle::control_cycle()
 
       /*Revisar si ponerlo como estado, ajustar angulo de orientacion,
       y ver si es necesario*/
-      if (last_state_ == TURN && avoided) {
+      /*if (last_state_ == TURN && avoided) {
         RCLCPP_INFO(get_logger(), "REORENTATION");
         out_vel.linear.x = 0.0f;
         out_vel.angular.z = SPEED_ANGULAR * side_;
         if ((now() - reorentation_t) > REORENTATION_TIME) {
           avoided = false;
         }
-      }
+      }*/
       //////////////////////////
 
       // Si el ultimo estado fue TURN, avanzar en arco
@@ -97,13 +97,14 @@ AvoidObstacle::control_cycle()
         linear_distance = 0.0;
         last_state_ = FORWARD;
         go_state(TURN);
+        RCLCPP_INFO(get_logger(), "CAMBIO: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       }
 
       break;
     case TURN:
       out_vel.linear.x = 0.0f;
       out_vel.angular.z = SPEED_ANGULAR * side_;
-
+      RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez gira los 90º procede a avanzar en arco
       if (check_turn_2_forward()) {
         RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
@@ -133,21 +134,6 @@ AvoidObstacle::go_state(int new_state)
   state_ts_ = now();
 }
 
-/*
-bool
-AvoidObstacle::check_forward_2_turn()
-{
-  // Implementar lógica del laser para detectar objeto
-  // en un abanico de 120 grados o menos.
-  // Actualizar la variable side_ en funcion del lado
-  // en el que se detecte el objeto.
-  /*size_t pos = last_scan_->ranges.size() / 2;
-  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;*/
-  auto elapsed = now() - state_ts_;
-  return elapsed > 10s;
-}
-*/
-
 bool
 AvoidObstacle::check_forward_2_turn()
 {
@@ -174,11 +160,11 @@ AvoidObstacle::check_forward_2_turn()
   if( max_pos < object_position_ && object_position_ < LONG_MED)
   {
     /*state_ = TURNING_RIGHT;*/
-    side_ = -1;
+    side_ = 1;
   }
   else
   {
-    side_ = 1;
+    side_ = -1;
     /*state_ = TURNING_LEFT;*/
   }
 

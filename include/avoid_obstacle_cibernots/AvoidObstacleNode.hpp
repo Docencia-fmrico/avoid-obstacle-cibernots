@@ -39,14 +39,13 @@ private:
   void control_cycle();
 
   float DISTANCE_DETECT = 0.5;
-  int LONG_MED = 760; // Longitud del array de medidas del laser
+  int LONG_MED = 360; // Longitud del array de medidas del laser
 
   float vuelta = 360;
 
   int min_pos = 45*(LONG_MED/vuelta);
   int max_pos = 315*(LONG_MED/vuelta);
   
-  int side_;
   int object_position_;
 
   static const int FORWARD = 0;
@@ -63,8 +62,8 @@ private:
   bool check_turn_2_forward();
   bool check_stop_2_forward();
 
-  static constexpr float SPEED_LINEAR = 0.5f;
-  static constexpr float SPEED_ANGULAR = 0.2f;
+  static constexpr float SPEED_LINEAR = 0.25f;
+  static constexpr float SPEED_ANGULAR = 0.5f;
   static constexpr float OBSTACLE_DISTANCE = 1.0f;
 
   double time_turn = M_PI_2/SPEED_ANGULAR;
