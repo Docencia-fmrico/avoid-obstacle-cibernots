@@ -133,37 +133,22 @@ AvoidObstacle::go_state(int new_state)
   state_ts_ = now();
 }
 
-/*
 bool
 AvoidObstacle::check_forward_2_turn()
 {
-  // Implementar lógica del laser para detectar objeto
-  // en un abanico de 120 grados o menos.
-  // Actualizar la variable side_ en funcion del lado
-  // en el que se detecte el objeto.
-  /*size_t pos = last_scan_->ranges.size() / 2;
-  return last_scan_->ranges[pos] < OBSTACLE_DISTANCE;*/
-  auto elapsed = now() - state_ts_;
-  return elapsed > 10s;
-}
-*/
+  bool detected_ = false;
 
-bool
-AvoidObstacle::check_forward_2_turn()
-{
-  bool detected_=false;
-
-  for(int j = 0; j < min_pos; j++){
-    if(last_scan_->ranges[j] < DISTANCE_DETECT && last_scan_->ranges[j] > last_scan_->range_min){
+  for (int j = 0; j < min_pos; j++) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
       detected_ = true;
       object_position_ = j;
       break;
     }
   }
 
-  if(!detected_){
-    for(int j = max_pos; j < last_scan_->ranges.size(); j++){
-      if(last_scan_->ranges[j] < DISTANCE_DETECT && last_scan_->ranges[j] > last_scan_->range_min){
+  if (!detected_) {
+    for (int j = max_pos; j < last_scan_->ranges.size(); j++) {
+      if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
         detected_ = true;
         object_position_ = j;
         break;
@@ -171,15 +156,13 @@ AvoidObstacle::check_forward_2_turn()
     }
   }
 
-  if( max_pos < object_position_ && object_position_ < LONG_MED)
-  {
-    /*state_ = TURNING_RIGHT;*/
+  if (max_pos < object_position_) {
+    /*TURNING_LEFT*/
     side_ = -1;
   }
-  else
-  {
+  else {
     side_ = 1;
-    /*state_ = TURNING_LEFT;*/
+    /*TURNING_RIGTH;*/
   }
 
   return detected_;
