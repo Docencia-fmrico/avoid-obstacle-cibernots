@@ -55,7 +55,7 @@ private:
   void go_state(int new_state);
   bool check_forward_2_turn();
   bool check_forward_2_stop();
-  bool check_turn_2_reor();
+  bool check_turn_2_arch();
   bool check_stop_2_forward();
   bool check_reor_2_forward();
 

@@ -106,7 +106,7 @@ AvoidObstacle::control_cycle()
       out_vel.angular.z = SPEED_ANGULAR * side_;
       RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez gira los 90º procede a avanzar en arco
-      if (check_turn_2_reor()) {
+      if (check_turn_2_arch()) {
         RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
         last_state_ = TURN;
         go_state(FORWARD);
@@ -125,7 +125,7 @@ AvoidObstacle::control_cycle()
 
     case REOR:
       out_vel.linear.x = 0.0f;
-      out_vel.angular.z = SPEED_ANGULAR * side_;
+      out_vel.angular.z = yyyyyyySPEED_ANGULAR * side_;
       RCLCPP_INFO(get_logger(), "REOR: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez se reorienta procede a avanzar
       if (check_reor_2_forward()) {
@@ -203,7 +203,7 @@ AvoidObstacle::check_stop_2_forward()
 }
 
 bool
-AvoidObstacle::check_turn_2_reor()
+AvoidObstacle::check_turn_2_arch()
 {
   return (now() - state_ts_) > TURNING_TIME;
 }
