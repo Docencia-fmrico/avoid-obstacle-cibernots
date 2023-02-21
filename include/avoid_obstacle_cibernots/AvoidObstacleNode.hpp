@@ -20,6 +20,7 @@
 #include <chrono>
 
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "kobuki_ros_interfaces/msg/button_event.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -35,6 +36,7 @@ public:
   AvoidObstacle();
 
 private:
+  void button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg);
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
   void control_cycle();
 
@@ -62,15 +64,22 @@ private:
   bool check_arch_2_reor();
   bool check_arch_2_turn();
 
-  static constexpr float SPEED_LINEAR = 0.25f;
-  static constexpr float SPEED_ANGULAR = 0.5f;
+  static constexpr float SPEED_LINEAR = 0.3f;
+  static constexpr float SPEED_ANGULAR = 0.45f;
   static constexpr float OBSTACLE_DISTANCE = 1.0f;
 
-  double time_turn = M_PI_2/SPEED_ANGULAR;
+  
+  double time_turn = (M_PI / 2) * (M_PI * SPEED_LINEAR / SPEED_ANGULAR);
+  float time_turn_90 = M_PI / 2.0 / SPEED_ANGULAR;
 
-  rclcpp::Duration TURNING_TIME = rclcpp::Duration::from_seconds(time_turn);
-  rclcpp::Duration REORENTATION_TIME = rclcpp::Duration::from_seconds(M_PI_4/SPEED_ANGULAR);
+  //double time_turn = M_PI/SPEED_ANGULAR;
+
+  rclcpp::Duration TURNING_TIME = rclcpp::Duration::from_seconds(time_turn_90);
+  // rclcpp::Duration REORENTATION_TIME = rclcpp::Duration::from_seconds(M_PI_4/SPEED_ANGULAR);
   const rclcpp::Duration SCAN_TIMEOUT {1s};
+
+  bool pressed_ = false;
+  rclcpp::Subscription<kobuki_ros_interfaces::msg::ButtonEvent>::SharedPtr button_sub_;
 
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_pub_;
@@ -80,7 +89,7 @@ private:
 
   int side_ = 1; // 1 o -1 para indicar el sentido de giro
 
-  const double HALF_CIRCUMFERENCE = M_PI * 0.6;
+  const double HALF_CIRCUMFERENCE = M_PI_2;// * 0.5;
   double linear_distance = 0.0;
 
   bool avoided = false;
