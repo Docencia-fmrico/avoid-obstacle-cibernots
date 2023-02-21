@@ -61,7 +61,7 @@ AvoidObstacle::control_cycle()
     case FORWARD:
       out_vel.linear.x = SPEED_LINEAR;
       out_vel.angular.z = 0.0f;
-
+      RCLCPP_INFO(get_logger(), "FORWARD: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       if (check_forward_2_stop()) {
         out_vel.linear.x = 0.0f;
         RCLCPP_INFO(get_logger(), "FORWARD -> STOP");
@@ -81,37 +81,24 @@ AvoidObstacle::control_cycle()
       }*/
       //////////////////////////
 
-      // Si el ultimo estado fue TURN, avanzar en arco
-      if (last_state_ == TURN && linear_distance < HALF_CIRCUMFERENCE) {
-        RCLCPP_INFO(get_logger(), "AVANZO EN ARCO: %f, linear_distance = %f", HALF_CIRCUMFERENCE, linear_distance);
-        linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
-        out_vel.angular.z = -SPEED_ANGULAR * side_;
-        if (linear_distance >= HALF_CIRCUMFERENCE) {
-          reorentation_t = now();
-          avoided = true;
-        }
-      }
-
       if (check_forward_2_turn()) {
-        RCLCPP_INFO(get_logger(),"FORWARD -> TURNING");
+        RCLCPP_INFO(get_logger(),"FORWARD -> TURN");
         linear_distance = 0.0;
         last_state_ = FORWARD;
         go_state(TURN);
         RCLCPP_INFO(get_logger(), "CAMBIO: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       }
-
       break;
     case TURN:
       out_vel.linear.x = 0.0f;
       out_vel.angular.z = SPEED_ANGULAR * side_;
       RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez gira los 90º procede a avanzar en arco
-      if (check_turn_2_forward()) {
+      if (check_turn_2_arch()) {
         RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
         last_state_ = TURN;
-        go_state(FORWARD);
+        go_state(ARCH);
       }
-
       break;
     case STOP:
       out_vel.linear.x = 0.0f;
@@ -122,6 +109,37 @@ AvoidObstacle::control_cycle()
         go_state(FORWARD);
       }
       break;
+    case REOR:
+      out_vel.linear.x = 0.0f;
+      out_vel.angular.z = SPEED_ANGULAR * side_;
+      RCLCPP_INFO(get_logger(), "REOR: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
+      // Una vez se reorienta procede a avanzar
+      if (check_reor_2_forward()) {
+        RCLCPP_INFO(get_logger(),"REOR -> FORWARD");
+        last_state_ = REOR;
+        go_state(FORWARD);
+      }
+      break;
+
+    case ARCH:
+      // Si el ultimo estado fue TURN, avanzar en arco
+      RCLCPP_INFO(get_logger(), "AVANZO EN ARCO: %f, linear_distance = %f", HALF_CIRCUMFERENCE, linear_distance);
+      linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
+      out_vel.linear.x = SPEED_LINEAR;
+      out_vel.angular.z = -SPEED_ANGULAR * side_;
+      if (linear_distance >= HALF_CIRCUMFERENCE) {
+        reorentation_t = now();
+        last_state_ = ARCH;
+        go_state(REOR);
+        break;
+      }
+      if (check_forward_2_turn()){
+        RCLCPP_INFO(get_logger(),"ARCH -> TURN");
+        last_state_ = ARCH;
+        go_state(TURN);
+        break;
+      }
+
   }
 
   vel_pub_->publish(out_vel);
@@ -142,7 +160,7 @@ AvoidObstacle::check_forward_2_turn()
 
 
   for (int j = 0; j < min_pos; j++) {
-    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < OBSTACLE_DISTANCE) {
       detected_ = true;
       object_position_ = j;
       break;
@@ -151,7 +169,7 @@ AvoidObstacle::check_forward_2_turn()
 
   if (!detected_) {
     for (int j = max_pos; j < last_scan_->ranges.size(); j++) {
-      if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
+      if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < OBSTACLE_DISTANCE) {
         detected_ = true;
         object_position_ = j;
         break;
@@ -160,15 +178,15 @@ AvoidObstacle::check_forward_2_turn()
   }
 
 
-  if (max_pos < object_position_) {
-    /*TURNING_LEFT*/
-    side_ = -1;
-  }
-  else {
-    side_ = 1;
+  // if (max_pos < object_position_) {
+  //   /*TURNING_LEFT*/
+  //   side_ = -1;
+  // }
+  // else {
+  //   side_ = 1;
     /*TURNING_RIGTH;*/
 
-  }
+  //}
 
   return detected_;
 }
@@ -191,9 +209,17 @@ AvoidObstacle::check_stop_2_forward()
 }
 
 bool
-AvoidObstacle::check_turn_2_forward()
+AvoidObstacle::check_turn_2_arch()
 {
   return (now() - state_ts_) > TURNING_TIME;
 }
+
+bool
+AvoidObstacle::check_reor_2_forward()
+{
+  return (now() - state_ts_) > REORENTATION_TIME;
+}
+
+
 
 }  // namespace avoid_obstacle_cibernots
