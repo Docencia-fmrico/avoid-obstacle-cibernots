@@ -47,6 +47,7 @@ private:
   static const int TURN = 1;
   static const int STOP = 2;
   static const int REOR = 3;
+  static const int ARCH = 4;
   int state_;
   int last_state_;
   rclcpp::Time state_ts_;
@@ -58,6 +59,8 @@ private:
   bool check_turn_2_arch();
   bool check_stop_2_forward();
   bool check_reor_2_forward();
+  bool check_arch_2_reor();
+  bool check_arch_2_turn();
 
   static constexpr float SPEED_LINEAR = 0.25f;
   static constexpr float SPEED_ANGULAR = 0.5f;
