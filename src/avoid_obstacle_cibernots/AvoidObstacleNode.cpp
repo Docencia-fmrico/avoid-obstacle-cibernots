@@ -17,6 +17,9 @@
 
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "kobuki_ros_interfaces/msg/button_event.hpp"
+#include "kobuki_ros_interfaces/msg/bumper_event.hpp"
+#include "kobuki_ros_interfaces/msg/sound.hpp"
+#include "kobuki_ros_interfaces/msg/led.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -31,7 +34,8 @@ AvoidObstacle::AvoidObstacle()
 : Node("avoid_obstacle"),
   state_(FORWARD),
   last_state_(FORWARD),
-  pressed_(false)
+  pressed_(false),
+  LED(0)
 {
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
@@ -40,12 +44,29 @@ AvoidObstacle::AvoidObstacle()
   button_sub_ = create_subscription<kobuki_ros_interfaces::msg::ButtonEvent>(
     "input_button", rclcpp::SensorDataQoS(),
     std::bind(&AvoidObstacle::button_callback, this, _1));
+  
+  bumper_sub_ = create_subscription<kobuki_ros_interfaces::msg::BumperEvent>(
+    "input_bumper", rclcpp::SensorDataQoS(),
+    std::bind(&AvoidObstacle::bumper_callback, this, _1));
 
   vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel", 10);
+  sound_pub_ = create_publisher<kobuki_ros_interfaces::msg::Sound>("output_sound", 10);
+  led_pub_ = create_publisher<kobuki_ros_interfaces::msg::Led>("output_led", 10);
+
   timer_ = create_wall_timer(50ms, std::bind(&AvoidObstacle::control_cycle, this));
   
   state_ts_ = now();
 }
+
+void 
+AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg)
+{
+  pressed_ = false;
+  kobuki_ros_interfaces::msg::Sound out_sound;
+  out_sound.value = 4;
+  sound_pub_->publish(out_sound);
+}
+
 
 void
 AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg)
@@ -73,6 +94,10 @@ AvoidObstacle::control_cycle()
   {
     RCLCPP_INFO(get_logger(), "in pressed");
     geometry_msgs::msg::Twist out_vel;
+
+    kobuki_ros_interfaces::msg::Led out_led;
+    out_led.value = 0;
+    led_pub_->publish(out_led);
 
     switch (state_) {
       case FORWARD:
@@ -139,6 +164,8 @@ AvoidObstacle::control_cycle()
         break;
 
       case ARCH:
+        out_led.value = 3;
+        led_pub_->publish(out_led);
         // Si el ultimo estado fue TURN, avanzar en arco
         RCLCPP_INFO(get_logger(), "AVANZO EN ARCO: %f, linear_distance = %f", HALF_CIRCUMFERENCE, linear_distance);
         linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
@@ -148,14 +175,17 @@ AvoidObstacle::control_cycle()
           reorentation_t = now();
           last_state_ = ARCH;
           go_state(REOR);
+          out_led.value = 0;
           break;
         }
         if (check_forward_2_turn()){
           RCLCPP_INFO(get_logger(),"ARCH -> TURN");
           last_state_ = ARCH;
           go_state(TURN);
+          out_led.value = 0;
           break;
         }
+        out_led.value = 0;
 
     }
 
