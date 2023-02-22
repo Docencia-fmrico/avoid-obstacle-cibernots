@@ -20,6 +20,11 @@
 #include <chrono>
 
 #include "sensor_msgs/msg/laser_scan.hpp"
+
+#include "kobuki_ros_interfaces/msg/bumper_event.hpp"
+#include "kobuki_ros_interfaces/msg/sound.hpp"
+#include "kobuki_ros_interfaces/msg/led.hpp"
+
 #include "kobuki_ros_interfaces/msg/button_event.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
@@ -36,6 +41,7 @@ public:
   AvoidObstacle();
 
 private:
+  void bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg);
   void button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg);
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
   void control_cycle();
@@ -58,6 +64,8 @@ private:
   int last_state_;
   rclcpp::Time state_ts_;
   rclcpp::Time reorentation_t;
+
+  int LED = 0;
 
   void go_state(int new_state);
   bool check_forward_2_turn();
@@ -84,12 +92,18 @@ private:
 
   bool pressed_ = false;
   rclcpp::Subscription<kobuki_ros_interfaces::msg::ButtonEvent>::SharedPtr button_sub_;
-
+  rclcpp::Subscription<kobuki_ros_interfaces::msg::BumperEvent>::SharedPtr bumper_sub_;
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
+
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_pub_;
+  rclcpp::Publisher<kobuki_ros_interfaces::msg::Sound>::SharedPtr sound_pub_;
+  rclcpp::Publisher<kobuki_ros_interfaces::msg::Led>::SharedPtr led_pub_;
+
   rclcpp::TimerBase::SharedPtr timer_;
 
   sensor_msgs::msg::LaserScan::UniquePtr last_scan_;
+
+  
 
   int side_ = 1; // 1 o -1 para indicar el sentido de giro
 
