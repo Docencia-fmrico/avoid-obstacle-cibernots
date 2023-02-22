@@ -19,19 +19,19 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     avoidobs_cmd = Node(package='avoid_obstacle_cibernots',
-                      executable='avoid_obs',
-                      output='screen',
-                      parameters=[{
-                        'use_sim_time': False
-                      }],
-                      remappings=[
-                        ('input_scan', '/scan_filtered'),
-                        ('output_vel', '/cmd_vel'),
-                        ('input_button', '/events/button'),
-                        ('input_bumper', '/events/bumper'),
-                        ('output_sound', '/commands/sound'),
-                        ('output_led', '/commands/led1')
-                      ])
+                        executable='avoid_obs',
+                        output='screen',
+                        parameters=[{
+                          'use_sim_time': False
+                        }],
+                        remappings=[
+                          ('input_scan', '/scan_filtered'),
+                          ('output_vel', '/cmd_vel'),
+                          ('input_button', '/events/button'),
+                          ('input_bumper', '/events/bumper'),
+                          ('output_sound', '/commands/sound'),
+                          ('output_led', '/commands/led1')
+                        ])
 
     ld = LaunchDescription()
     ld.add_action(avoidobs_cmd)
