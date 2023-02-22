@@ -1,4 +1,4 @@
-// Copyright 2023 Intelligent Robotics Lab
+// Copyright 2023 avoid_obstacle_cibernots.copyright
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
