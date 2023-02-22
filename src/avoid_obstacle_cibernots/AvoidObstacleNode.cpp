@@ -112,7 +112,7 @@ AvoidObstacle::control_cycle()
         RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
         // Una vez gira los 90º procede a avanzar en arco
         if (check_turn_2_arch()) {
-          RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
+          RCLCPP_INFO(get_logger(),"TURNING -> ARCH");
           last_state_ = TURN;
           go_state(ARCH);
         }
@@ -144,7 +144,7 @@ AvoidObstacle::control_cycle()
         linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
         out_vel.linear.x = SPEED_LINEAR;
         out_vel.angular.z = -SPEED_ANGULAR * side_;
-        if (linear_distance >= HALF_CIRCUMFERENCE) {
+        if (linear_distance >= SPEED_LINEAR * time_turn) {
           reorentation_t = now();
           last_state_ = ARCH;
           go_state(REOR);
@@ -235,7 +235,7 @@ AvoidObstacle::check_turn_2_arch()
 bool
 AvoidObstacle::check_reor_2_forward()
 {
-  return (now() - state_ts_) > TURNING_TIME;
+  return (now() - state_ts_) > TURNING_TIME*0.85;
 }
 
 

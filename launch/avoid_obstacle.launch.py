@@ -25,9 +25,9 @@ def generate_launch_description():
                         'use_sim_time': False
                       }],
                       remappings=[
-                        ('input_scan', '/scan'),
-                        ('output_vel', '/cmd_vel')#,
-                        #('input_button', '/events/button')
+                        ('input_scan', '/scan_filtered'),
+                        ('output_vel', '/cmd_vel'),
+                        ('input_button', '/events/button')
                       ])
 
     ld = LaunchDescription()

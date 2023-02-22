@@ -40,8 +40,12 @@ private:
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
   void control_cycle();
 
-  int min_pos = 45;
-  int max_pos = 315;
+  //int min_pos = 45;
+  int min_pos = 40;
+
+  //int max_pos = 315;
+  int max_pos = 320;
+
   
   int object_position_;
 
@@ -65,12 +69,12 @@ private:
   bool check_arch_2_turn();
 
   static constexpr float SPEED_LINEAR = 0.3f;
-  static constexpr float SPEED_ANGULAR = 0.45f;
-  static constexpr float OBSTACLE_DISTANCE = 1.0f;
+  static constexpr float SPEED_ANGULAR = 0.6f;
+  static constexpr float OBSTACLE_DISTANCE = 0.5f;
 
   
-  double time_turn = (M_PI / 2) * (M_PI * SPEED_LINEAR / SPEED_ANGULAR);
-  float time_turn_90 = M_PI / 2.0 / SPEED_ANGULAR;
+  double time_turn = (M_PI_2) * (M_PI * SPEED_LINEAR / SPEED_ANGULAR) * 3.2;
+  float time_turn_90 = M_PI_2 / SPEED_ANGULAR * 1.5;
 
   //double time_turn = M_PI/SPEED_ANGULAR;
 
