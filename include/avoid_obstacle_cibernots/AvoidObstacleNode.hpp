@@ -45,8 +45,9 @@ private:
 
   int min_pos = 45*(LONG_MED/vuelta);
   int max_pos = 315*(LONG_MED/vuelta);
+  int len_meds = 90*(LONG_MED/vuelta);
   
-  int object_position_;
+  int object_position_[90]; //len_meds
 
   static const int FORWARD = 0;
   static const int TURN = 1;
@@ -61,6 +62,7 @@ private:
   bool check_forward_2_stop();
   bool check_turn_2_forward();
   bool check_stop_2_forward();
+  int obstacle_side();
 
   static constexpr float SPEED_LINEAR = 0.25f;
   static constexpr float SPEED_ANGULAR = 0.5f;

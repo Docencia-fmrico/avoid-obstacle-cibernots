@@ -103,6 +103,7 @@ AvoidObstacle::control_cycle()
       break;
     case TURN:
       out_vel.linear.x = 0.0f;
+      side_ = obstacle_side();
       out_vel.angular.z = SPEED_ANGULAR * side_;
       RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
       // Una vez gira los 90º procede a avanzar en arco
@@ -139,38 +140,50 @@ AvoidObstacle::check_forward_2_turn()
 {
 
   bool detected_ = false;
-
+  int n = 0;
 
   for (int j = 0; j < min_pos; j++) {
     if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
       detected_ = true;
-      object_position_ = j;
-      break;
+      object_position_[n] = last_scan_->ranges[j];
     }
+    object_position_[n] = -1;
+    n++;
   }
 
-  if (!detected_) {
-    for (int j = max_pos; j < last_scan_->ranges.size(); j++) {
-      if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
-        detected_ = true;
-        object_position_ = j;
-        break;
+  for (int j = max_pos; j < last_scan_->ranges.size(); j++) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
+      detected_ = true;
+      object_position_[n] = last_scan_->ranges[j];
+    }
+    object_position_[n] = -1;
+    n++;
+  }
+
+  return detected_;
+}
+
+int
+AvoidObstacle::obstacle_side()
+{
+  int n;
+  int side;
+
+  for (int j = 0; j < len_meds; j++) {
+    if (object_position_[j] != -1) {
+      if (object_position_[j] < object_position_[n]) {
+        n = j;
       }
     }
   }
 
-
-  if (max_pos < object_position_) {
-    /*TURNING_LEFT*/
-    side_ = -1;
-  }
-  else {
-    side_ = 1;
-    /*TURNING_RIGTH;*/
-
+  if (n < min_pos) {
+    side = -1;
+  } else {
+    side = 1;
   }
 
-  return detected_;
+  return side;
 }
 
 bool
