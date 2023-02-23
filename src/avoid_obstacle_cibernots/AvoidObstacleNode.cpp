@@ -36,6 +36,18 @@ AvoidObstacle::AvoidObstacle()
   last_state_(FORWARD),
   pressed_(false)
 {
+  declare_parameter("SPEED_LINEAR", 0.0f);
+  declare_parameter("SPEED_ANGULAR", 0.0f);
+  declare_parameter("OBSTACLE_DISTANCE", 0.0f);
+  declare_parameter("MULTIP_ARCH", 0.0f);
+  declare_parameter("MULTIP_TURN", 0.0f);
+
+  get_parameter("SPEED_LINEAR",SPEED_LINEAR);
+  get_parameter("SPEED_ANGULAR",SPEED_ANGULAR);
+  get_parameter("OBSTACLE_DISTANCE",OBSTACLE_DISTANCE);
+  get_parameter("MULTIP_ARCH",MULTIP_ARCH);
+  get_parameter("MULTIP_TURN",MULTIP_TURN);
+
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
     std::bind(&AvoidObstacle::scan_callback, this, _1));
