@@ -66,6 +66,22 @@ A video of the operation of the robot with the finite state machine implemented 
 
 ## Lidar logic
 
+In this case, we used the /scan_filtered topic, which published an array with a length of 360. This array consists of the distance values taken by the lidar. 
+The logic is: the lidar starts its array (0) at position π/2. For this reason, the values of importance, or risk, are those ranging from π/4 to 3π/4, which these measurements correspond to the objects in front of the kobuki, they can be related to the values 0-45 and 315-360 of the array. 
+In this case, it is very simple and visual because the array has exactly 360 measures, in the case that the number of measures would be different, we could make this calculation:
+
+Snippet (example):
+``` c++
+val_π/4 = 45*x/360; //example for 45º.
+```
+In this way, we could get the corresponding number from the array, relating it to an angle.
+
+With all this in mind, we simply create two loops, one for each piece of the array, corresponding one zone to the right of the robot (π/2-π/4) and the other to the left (π/2-3π/4). In each iteration of the loop we put a series of conditions to filter the measurements, in case we detect something in our distance threshold, the robot will store that distance as well as notifying the detection by a boolean.
+
+After setting our boolean to true, we must indicate on which side we have detected the obstacle. In this step, we were very careful because if the robot entered a corner and this was not very well determined, the robot would get stuck.
+
+We went through our previously saved array of measurements and kept the position of the smallest measurement. Depending on the position, we could know whether the nearest object is to the left or to the right. For example, if we take 80 measurements and start by measuring the right side of the robot, if our smallest measurement is between position 0-39, it means we have an obstacle on the right.
+
 ## Parameters
 We used .yaml and .py files:
 
