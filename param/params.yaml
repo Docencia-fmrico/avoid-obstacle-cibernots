@@ -1,0 +1,9 @@
+avoid_obstacle:
+  ros__parameters:
+    # SPEED_LINEAR: 0.25f
+    # SPEED_ANGULAR: 0.5f
+
+    # state_: 0
+    # last_state_: 0
+
+    use_sim_time: True
