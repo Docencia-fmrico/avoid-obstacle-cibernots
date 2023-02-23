@@ -140,7 +140,6 @@ AvoidObstacle::control_cycle()
 
       case TURN:
         out_vel.linear.x = 0.0f;
-        side_ = obstacle_side();
         out_vel.angular.z = SPEED_ANGULAR * side_;
 
         // Una vez gira los 90º procede a avanzar en arco
@@ -218,8 +217,11 @@ AvoidObstacle::check_forward_2_turn()
     {
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
+    } 
+    else 
+    {
+      object_position_[n] = 1e9;
     }
-    object_position_[n] = 1e9;
     n++;
   }
 
@@ -230,8 +232,15 @@ AvoidObstacle::check_forward_2_turn()
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
     }
-    object_position_[n] = 1e9;
+    else 
+    {
+      object_position_[n] = 1e9;
+    }
     n++;
+  }
+  if (detected_) 
+  {
+    side_ = obstacle_side();
   }
 
   return detected_;
@@ -240,15 +249,15 @@ AvoidObstacle::check_forward_2_turn()
 int
 AvoidObstacle::obstacle_side()
 {
-  int n;
+  int n = 0;
   int side;
 
-  for (int j = 0; j < LEN_MEDS; j++) {
-    if (object_position_[j] < object_position_[n]) {
-      n = j;
+  for (int i = 1; i < LEN_MEDS; i++) {
+    if (object_position_[i] < object_position_[n]) {
+      n = i;
     }
   }
-
+  RCLCPP_INFO(get_logger(), "%d", n);
   if (n < MIN_POS) {
     side = -1;
   } else {
