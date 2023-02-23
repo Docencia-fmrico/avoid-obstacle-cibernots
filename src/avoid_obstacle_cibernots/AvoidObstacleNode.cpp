@@ -212,7 +212,9 @@ AvoidObstacle::check_forward_2_turn()
   }
 
   for (int j = MAX_POS; j < last_scan_->ranges.size(); j++) {
-    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
+      last_scan_->ranges[j] < OBSTACLE_DISTANCE)
+    {
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
     }
@@ -230,7 +232,6 @@ AvoidObstacle::obstacle_side()
   int side;
 
   for (int j = 0; j < LEN_MEDS; j++) {
-
     if (object_position_[j] < object_position_[n]) {
       n = j;
     }
