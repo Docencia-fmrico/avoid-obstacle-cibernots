@@ -33,14 +33,14 @@
 
 First connect the base and the lidar then :
 -----------------------------------------------------------------------
-Snippet(launch base):
+Snippet (launch base):
 ``` bash
 ros2 launch ir_robots kobuki.launch.py # Driver of the kobuki
 ```
 -----------------------------------------------------------------------
 
 -----------------------------------------------------------------------
-Snippet(launch avoid_obstacle_cibernots):
+Snippet (launch avoid_obstacle_cibernots):
 ``` bash
 ros2 launch avoid_obstacle_cibernots avoid_obstacle.launch.py  # avoid_obstacle_cibernots
 ```
@@ -49,6 +49,20 @@ ros2 launch avoid_obstacle_cibernots avoid_obstacle.launch.py  # avoid_obstacle_
 ## AvoidObstacleNode
 
 ## Finit State Machine
+The finit state machine consists of 6 states: Forward, Turn, Stop, Reor and Arch.
+
+*Forward*: straight ahead state. If no measurements are received from the laser, it jumps to the *Stop* state. On the other hand, if an obstacle is detected by the use of the laser, it jumps to the *Turn* state.
+
+*Turn*: pi/2 radian turning state. The direction of the pi/2 radians turn will be carried out according to the side on which the obstacle is detected, turning in the opposite direction to the obstacle. Once the turn has been made, it jumps to the *Arch* state.
+
+*Arch*: state of progress in arc. If the robot detects any obstacle in the process of advancing in arc, it will jump to the *Turn* state. Once the arc path is completed, it jumps to the *Reor* state.
+
+*Reor*: Reorientation state. At the end of the arc, the robot reorients itself back to the direction it had just before encountering an obstacle in the *Forward* state.
+
+*Stop*: Stop state. If no readings are received from the laser, the robot stops until readings are received again, in which case it will jump to the *Forward* state.
+
+A video of the operation of the robot with the finite state machine implemented is attached below:
+[Video 1](https://urjc-my.sharepoint.com/:v:/g/personal/da_quinga_2020_alumnos_urjc_es/EVzN7Xe43xxArq__mGFdy_4B9yuPPSlcPpkyF0HMEDuCLw?e=yFzh2u)
 
 ## Lidar logic
 
