@@ -37,10 +37,10 @@ def generate_launch_description():
                             ('input_bumper', '/events/bumper'),
                             ('output_sound', '/commands/sound'),
                             ('output_led', '/commands/led1')
-                        ]
-      )
+                        ])
 
     ld = LaunchDescription()
     ld.add_action(avoidobs_cmd)
 
     return ld
+    
