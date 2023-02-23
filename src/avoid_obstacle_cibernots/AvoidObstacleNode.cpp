@@ -1,4 +1,4 @@
-// Copyright 2023 Intelligent Robotics Lab
+// Copyright 2023 avoid_obstacle_cibernots.copyright
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 #include "avoid_obstacle_cibernots/AvoidObstacleNode.hpp"
 
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "kobuki_ros_interfaces/msg/button_event.hpp"
+#include "kobuki_ros_interfaces/msg/bumper_event.hpp"
+#include "kobuki_ros_interfaces/msg/sound.hpp"
+#include "kobuki_ros_interfaces/msg/led.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -29,17 +33,46 @@ using std::placeholders::_1;
 AvoidObstacle::AvoidObstacle()
 : Node("avoid_obstacle"),
   state_(FORWARD),
-  last_state_(FORWARD)
+  last_state_(FORWARD),
+  pressed_(false)
 {
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
     std::bind(&AvoidObstacle::scan_callback, this, _1));
 
+  button_sub_ = create_subscription<kobuki_ros_interfaces::msg::ButtonEvent>(
+    "input_button", rclcpp::SensorDataQoS(),
+    std::bind(&AvoidObstacle::button_callback, this, _1));
+
+  bumper_sub_ = create_subscription<kobuki_ros_interfaces::msg::BumperEvent>(
+    "input_bumper", rclcpp::SensorDataQoS(),
+    std::bind(&AvoidObstacle::bumper_callback, this, _1));
+
   vel_pub_ = create_publisher<geometry_msgs::msg::Twist>("output_vel", 10);
+  sound_pub_ = create_publisher<kobuki_ros_interfaces::msg::Sound>("output_sound", 10);
+  led_pub_ = create_publisher<kobuki_ros_interfaces::msg::Led>("output_led", 10);
+
   timer_ = create_wall_timer(50ms, std::bind(&AvoidObstacle::control_cycle, this));
-  
+
   state_ts_ = now();
 }
+
+void
+AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg)
+{
+  pressed_ = false;
+  kobuki_ros_interfaces::msg::Sound out_sound;
+  out_sound.value = kobuki_ros_interfaces::msg::Sound::ERROR;
+  sound_pub_->publish(out_sound);
+}
+
+
+void
+AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg)
+{
+  pressed_ = true;
+}
+
 
 void
 AvoidObstacle::scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg)
@@ -55,77 +88,91 @@ AvoidObstacle::control_cycle()
     return;
   }
 
-  geometry_msgs::msg::Twist out_vel;
+  if (pressed_) {
+    geometry_msgs::msg::Twist out_vel;
+    kobuki_ros_interfaces::msg::Led out_led;
 
-  switch (state_) {
-    case FORWARD:
-      out_vel.linear.x = SPEED_LINEAR;
-      out_vel.angular.z = 0.0f;
+    out_led.value = kobuki_ros_interfaces::msg::Led::BLACK;
 
-      if (check_forward_2_stop()) {
+    switch (state_) {
+      case FORWARD:
+        out_vel.linear.x = SPEED_LINEAR;
+        out_vel.angular.z = 0.0f;
+
+        if (check_forward_2_stop()) {
+          out_vel.linear.x = 0.0f;
+          RCLCPP_INFO(get_logger(), "FORWARD -> STOP");
+          last_state_ = FORWARD;
+          go_state(STOP);
+        }
+
+        if (check_forward_2_turn()) {
+          RCLCPP_INFO(get_logger(), "FORWARD -> TURN");
+          linear_distance = 0.0;
+          last_state_ = FORWARD;
+          go_state(TURN);
+        }
+        break;
+
+      case TURN:
         out_vel.linear.x = 0.0f;
-        RCLCPP_INFO(get_logger(), "FORWARD -> STOP");
-        last_state_ = FORWARD;
-        go_state(STOP);
-      }
+        side_ = obstacle_side();
+        out_vel.angular.z = SPEED_ANGULAR * side_;
 
-      /*Revisar si ponerlo como estado, ajustar angulo de orientacion,
-      y ver si es necesario*/
-      /*if (last_state_ == TURN && avoided) {
-        RCLCPP_INFO(get_logger(), "REORENTATION");
+        // Una vez gira los 90º procede a avanzar en arco
+        if (check_turn_2_arch()) {
+          RCLCPP_INFO(get_logger(), "TURNING -> ARCH");
+          last_state_ = TURN;
+          go_state(ARCH);
+        }
+        break;
+
+      case STOP:
+        out_led.value = kobuki_ros_interfaces::msg::Led::ORANGE;
+        out_vel.linear.x = 0.0f;
+        out_vel.angular.z = 0.0f;
+
+        if (check_stop_2_forward()) {
+          RCLCPP_INFO(get_logger(), "STOP -> FORWARD");
+          go_state(FORWARD);
+        }
+        break;
+
+      case REOR:
         out_vel.linear.x = 0.0f;
         out_vel.angular.z = SPEED_ANGULAR * side_;
-        if ((now() - reorentation_t) > REORENTATION_TIME) {
-          avoided = false;
-        }
-      }*/
-      //////////////////////////
 
-      // Si el ultimo estado fue TURN, avanzar en arco
-      if (last_state_ == TURN && linear_distance < HALF_CIRCUMFERENCE) {
-        RCLCPP_INFO(get_logger(), "AVANZO EN ARCO: %f, linear_distance = %f", HALF_CIRCUMFERENCE, linear_distance);
+        // Una vez se reorienta procede a avanzar
+        if (check_reor_2_forward()) {
+          RCLCPP_INFO(get_logger(), "REOR -> FORWARD");
+          last_state_ = REOR;
+          go_state(FORWARD);
+        }
+        break;
+
+      case ARCH:
+        out_led.value = kobuki_ros_interfaces::msg::Led::RED;
+
         linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
+        out_vel.linear.x = SPEED_LINEAR;
         out_vel.angular.z = -SPEED_ANGULAR * side_;
-        if (linear_distance >= HALF_CIRCUMFERENCE) {
-          reorentation_t = now();
-          avoided = true;
+
+        if (check_arch_2_reor()) {
+          last_state_ = ARCH;
+          go_state(REOR);
+          break;
         }
-      }
 
-      if (check_forward_2_turn()) {
-        RCLCPP_INFO(get_logger(),"FORWARD -> TURNING");
-        linear_distance = 0.0;
-        last_state_ = FORWARD;
-        go_state(TURN);
-        RCLCPP_INFO(get_logger(), "CAMBIO: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
-      }
-
-      break;
-    case TURN:
-      out_vel.linear.x = 0.0f;
-      side_ = obstacle_side();
-      out_vel.angular.z = SPEED_ANGULAR * side_;
-      RCLCPP_INFO(get_logger(), "TURN: %ld y %ld", now().nanoseconds(), state_ts_.nanoseconds());
-      // Una vez gira los 90º procede a avanzar en arco
-      if (check_turn_2_forward()) {
-        RCLCPP_INFO(get_logger(),"TURNING -> FORWARD");
-        last_state_ = TURN;
-        go_state(FORWARD);
-      }
-
-      break;
-    case STOP:
-      out_vel.linear.x = 0.0f;
-      out_vel.angular.z = 0.0f;
-
-      if (check_stop_2_forward()) {
-        RCLCPP_INFO(get_logger(),"STOP -> FORWARD");
-        go_state(FORWARD);
-      }
-      break;
+        if (check_arch_2_turn()) {
+          RCLCPP_INFO(get_logger(), "ARCH -> TURN");
+          last_state_ = ARCH;
+          go_state(TURN);
+          break;
+        }
+    }
+    led_pub_->publish(out_led);
+    vel_pub_->publish(out_vel);
   }
-
-  vel_pub_->publish(out_vel);
 }
 
 void
@@ -138,12 +185,13 @@ AvoidObstacle::go_state(int new_state)
 bool
 AvoidObstacle::check_forward_2_turn()
 {
-
   bool detected_ = false;
   int n = 0;
 
-  for (int j = 0; j < min_pos; j++) {
-    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
+  for (int j = 0; j < MIN_POS; j++) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
+      last_scan_->ranges[j] < OBSTACLE_DISTANCE)
+    {
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
     }
@@ -151,7 +199,7 @@ AvoidObstacle::check_forward_2_turn()
     n++;
   }
 
-  for (int j = max_pos; j < last_scan_->ranges.size(); j++) {
+  for (int j = MAX_POS; j < last_scan_->ranges.size(); j++) {
     if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) && last_scan_->ranges[j] < DISTANCE_DETECT) {
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
@@ -169,14 +217,14 @@ AvoidObstacle::obstacle_side()
   int n;
   int side;
 
-  for (int j = 0; j < len_meds; j++) {
+  for (int j = 0; j < LEN_MEDS; j++) {
 
     if (object_position_[j] < object_position_[n]) {
       n = j;
     }
   }
 
-  if (n < min_pos) {
+  if (n < MIN_POS) {
     side = -1;
   } else {
     side = 1;
@@ -203,9 +251,29 @@ AvoidObstacle::check_stop_2_forward()
 }
 
 bool
-AvoidObstacle::check_turn_2_forward()
+AvoidObstacle::check_turn_2_arch()
 {
   return (now() - state_ts_) > TURNING_TIME;
 }
+
+bool
+AvoidObstacle::check_reor_2_forward()
+{
+  return (now() - state_ts_) > REORENTATION_TIME;
+}
+
+
+bool
+AvoidObstacle::check_arch_2_reor()
+{
+  return linear_distance >= (SPEED_LINEAR * t_arch);
+}
+
+bool
+AvoidObstacle::check_arch_2_turn()
+{
+  return check_forward_2_turn();
+}
+
 
 }  // namespace avoid_obstacle_cibernots
