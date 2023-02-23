@@ -39,7 +39,6 @@ public:
   AvoidObstacle();
 
 private:
-
   // Callback bumper event (stop if bumper is pressed)
   void bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg);
 
@@ -55,7 +54,7 @@ private:
   // Constant max and min range of the laser
   static const int MAX_POS = 320;
   static const int MIN_POS = 40;
-  
+
   // Constant amplitude of values of the laser
   static const int LEN_MEDS = 80;
 
