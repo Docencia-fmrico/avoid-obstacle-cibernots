@@ -90,8 +90,7 @@ AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePt
 void
 AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg)
 {
-  if (msg->state == kobuki_ros_interfaces::msg::ButtonEvent::PRESSED)
-  {
+  if (msg->state == kobuki_ros_interfaces::msg::ButtonEvent::PRESSED) {
     RCLCPP_INFO(get_logger(), "BUTTON PRESSED");
     pressed_ = !pressed_;
   }
