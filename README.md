@@ -72,7 +72,7 @@ In this case, it is very simple and visual because the array has exactly 360 mea
 
 Snippet (example):
 ``` c++
-val_π/4 = 45*x/360; //example for 45º.
+val_45 = 45*x/360; //example for 45º (π/4)
 ```
 In this way, we could get the corresponding number from the array, relating it to an angle.
 
