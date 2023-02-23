@@ -30,12 +30,8 @@ def generate_launch_description():
                       executable='avoid_obs',
                       output='screen',
                       parameters=[param_file],
-                      # parameters=[{
-                      #   'use_sim_time': True
-                      # }],
                       remappings=[
-                        ('input_scan', '/scan'),
-                        # ('input_scan', '/scan_filtered'),
+                        ('input_scan', '/scan_filtered'),
                         ('output_vel', '/cmd_vel'),
                         ('input_button', '/events/button'),
                         ('input_bumper', '/events/bumper'),
