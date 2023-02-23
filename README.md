@@ -18,7 +18,7 @@
 - [AvoidObstacleNode](#AvoidObstacleNode)
 - [Finit State Machine](#Finit-State-Machine)
 - [Lidar logic](#Lidar-logic)
-- [Parameters](#Parameters)
+- [Parameters](#parameters)
 - [Implements](#implements)
 - [Tests](#tests)
 - [Continuous integration](#Continuous-integration)
@@ -83,39 +83,108 @@ After setting our boolean to true, we must indicate on which side we have detect
 We went through our previously saved array of measurements and kept the position of the smallest measurement. Depending on the position, we could know whether the nearest object is to the left or to the right. For example, if we take 80 measurements and start by measuring the right side of the robot, if our smallest measurement is between position 0-39, it means we have an obstacle on the right.
 
 ## Parameters
-We used .yaml and .py files:
+Use of parameters, implementation.
 
 ### .yaml
 
+To make an improvement in our code, we used a .yaml file, very usefull when we have a considerable number of parameters, so we can control them in a unique file, and prevent a waste of time compiling our programs each time we vary a parameter. 
 
+We can set up our program parameters in one unique file with this structure:
 
 -----------------------------------------------------------------------
-Snippet(yaml example):
-``` yaml
-
+Snippet (.yaml example):
+``` .yaml
+# params.yaml
+avoid_obstacle:
+  ros__parameters:
+    SPEED_LINEAR: 0.3
+    SPEED_ANGULAR: 0.6
+    OBSTACLE_DISTANCE: 0.5
+    MULTIP_ARCH: 3.2
+    MULTIP_TURN: 1.5
+  
+    use_sim_time: False
 ```
 -----------------------------------------------------------------------
 
 ### .py
 
-
+We created a new directory called "param", with its respective file "params.yaml". 
+In the launcher, we need to get the path to the param file and create an os.path module that gives as acces to common pathname manipulations. 
+```py 
+# avoid_obstacle.launch.py
+param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
+```
+In the launcher, we need to configurate the node with the relation
+```py 
+# avoid_obstacle.launch.py
+avoidobs_cmd = Node(
+                    parameters =[param_file]
+                    )
+```
 
 -----------------------------------------------------------------------
-Snippet(launch example):
+Snippet (launch example):
 ``` py
+## avoid_obstacle.launch.py
 
+# Get the path to the param file
+param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
+
+# Node configuration
+avoidobs_cmd = Node(package='avoid_obstacle_cibernots',
+                    executable='avoid_obs',
+                    output='screen',
+                    parameters=[param_file],
+                    remappings=[
+                        ('input_scan', '/scan_filtered'),
+                        ('output_vel', '/cmd_vel'),
+                        ('input_button', '/events/button'),
+                        ('input_bumper', '/events/bumper'),
+                        ('output_sound', '/commands/sound'),
+                        ('output_led', '/commands/led1')
+                    ])
 ```
 -----------------------------------------------------------------------
+
+### .cpp
+
+Later, in our node, we need to declare parameters default values with
+```cpp
+// AvoidObstacleNode.cpp
+declare_parameter("SPEED_LINEAR", 0.0f);
+declare_parameter("SPEED_ANGULAR", 0.0f);
+declare_parameter("OBSTACLE_DISTANCE", 0.0f);
+declare_parameter("MULTIP_ARCH", 0.0f);
+declare_parameter("MULTIP_TURN", 0.0f);
+```
+To get the parameters from the .yaml file we use
+```cpp
+// AvoidObstacleNode.cpp
+get_parameter("SPEED_LINEAR", SPEED_LINEAR);
+get_parameter("SPEED_ANGULAR", SPEED_ANGULAR);
+get_parameter("OBSTACLE_DISTANCE", OBSTACLE_DISTANCE);
+get_parameter("MULTIP_ARCH", MULTIP_ARCH);
+get_parameter("MULTIP_TURN", MULTIP_TURN);
+```
+
 
 ### How to get the params
 
 
 -----------------------------------------------------------------------
-Snippet(Getting params example):
+Snippet(Getting params):
 ``` cpp
-
+get_parameter("<param_name_yaml>", <parameter>);
 ```
 -----------------------------------------------------------------------
+### CMake
+
+Finally, we need to generate the installation rules in the CMakeLists.txt file with
+```CMake
+# CMakeLists.txt
+install(DIRECTORY param DESTINATION share/${PROJECT_NAME})
+```
 
 ## Implements
 
