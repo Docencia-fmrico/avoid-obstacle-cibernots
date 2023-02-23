@@ -147,7 +147,7 @@ AvoidObstacle::check_forward_2_turn()
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
     }
-    object_position_[n] = -1;
+    object_position_[n] = 1e9;
     n++;
   }
 
@@ -156,7 +156,7 @@ AvoidObstacle::check_forward_2_turn()
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
     }
-    object_position_[n] = -1;
+    object_position_[n] = 1e9;
     n++;
   }
 
@@ -170,10 +170,9 @@ AvoidObstacle::obstacle_side()
   int side;
 
   for (int j = 0; j < len_meds; j++) {
-    if (object_position_[j] != -1) {
-      if (object_position_[j] < object_position_[n]) {
-        n = j;
-      }
+
+    if (object_position_[j] < object_position_[n]) {
+      n = j;
     }
   }
 
