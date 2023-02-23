@@ -217,9 +217,7 @@ AvoidObstacle::check_forward_2_turn()
     {
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
-    } 
-    else 
-    {
+    } else {
       object_position_[n] = 1e9;
     }
     n++;
@@ -231,15 +229,12 @@ AvoidObstacle::check_forward_2_turn()
     {
       detected_ = true;
       object_position_[n] = last_scan_->ranges[j];
-    }
-    else 
-    {
+    } else {
       object_position_[n] = 1e9;
     }
     n++;
   }
-  if (detected_) 
-  {
+  if (detected_) {
     side_ = obstacle_side();
   }
 
