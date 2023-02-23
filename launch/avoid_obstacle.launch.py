@@ -23,23 +23,23 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-    pkg_dir = get_package_share_directory('avoid_obstacle_cibernots')
-    param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
+  pkg_dir = get_package_share_directory('avoid_obstacle_cibernots')
+  param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
 
-    avoidobs_cmd = Node(package='avoid_obstacle_cibernots',
-                      executable='avoid_obs',
-                      output='screen',
-                      parameters=[param_file],
-                      remappings=[
-                        ('input_scan', '/scan_filtered'),
-                        ('output_vel', '/cmd_vel'),
-                        ('input_button', '/events/button'),
-                        ('input_bumper', '/events/bumper'),
-                        ('output_sound', '/commands/sound'),
-                        ('output_led', '/commands/led1')
-                      ])
+  avoidobs_cmd = Node(package='avoid_obstacle_cibernots',
+    executable='avoid_obs',
+    output='screen',
+    parameters=[param_file],
+    remappings=[
+      ('input_scan', '/scan_filtered'),
+      ('output_vel', '/cmd_vel'),
+      ('input_button', '/events/button'),
+      ('input_bumper', '/events/bumper'),
+      ('output_sound', '/commands/sound'),
+      ('output_led', '/commands/led1')
+    ])
 
-    ld = LaunchDescription()
-    ld.add_action(avoidobs_cmd)
+  ld = LaunchDescription()
+  ld.add_action(avoidobs_cmd)
 
-    return ld
+  return ld
