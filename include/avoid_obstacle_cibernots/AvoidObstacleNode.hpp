@@ -70,14 +70,15 @@ private:
   bool check_arch_2_reor();
   bool check_arch_2_turn();
 
+  float SPEED_LINEAR = 0;
+  float SPEED_ANGULAR = 0;
+  float OBSTACLE_DISTANCE = 0;
 
-  static constexpr float SPEED_LINEAR = 0.3f;
-  static constexpr float SPEED_ANGULAR = 0.6f;
-  static constexpr float OBSTACLE_DISTANCE = 0.5f;
+  float MULTIP_ARCH = 0;
+  float MULTIP_TURN = 0;
 
-
-  double t_arch = ((M_PI_2 * M_PI * SPEED_LINEAR) / SPEED_ANGULAR) * 3.2;
-  float t_turn_90d = (M_PI_2 / SPEED_ANGULAR) * 1.5;
+  double t_arch = ((M_PI_2 * M_PI * SPEED_LINEAR) / SPEED_ANGULAR) * MULTIP_ARCH;
+  float t_turn_90d = (M_PI_2 / SPEED_ANGULAR) * MULTIP_TURN;
 
   double linear_distance = 0.0;
 
