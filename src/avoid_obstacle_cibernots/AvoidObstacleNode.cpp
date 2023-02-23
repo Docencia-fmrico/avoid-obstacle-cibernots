@@ -140,6 +140,7 @@ AvoidObstacle::control_cycle()
 
       case TURN:
         out_vel.linear.x = 0.0f;
+        side_ = obstacle_side();
         out_vel.angular.z = SPEED_ANGULAR * side_;
 
         // Una vez gira los 90º procede a avanzar en arco
@@ -193,7 +194,6 @@ AvoidObstacle::control_cycle()
           break;
         }
     }
-
     led_pub_->publish(out_led);
     vel_pub_->publish(out_vel);
   }
@@ -210,40 +210,52 @@ bool
 AvoidObstacle::check_forward_2_turn()
 {
   bool detected_ = false;
-
+  int n = 0;
 
   for (int j = 0; j < MIN_POS; j++) {
     if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
       last_scan_->ranges[j] < OBSTACLE_DISTANCE)
     {
       detected_ = true;
-      object_position_ = j;
-      break;
+      object_position_[n] = last_scan_->ranges[j];
     }
+    object_position_[n] = 1e9;
+    n++;
   }
 
-  if (!detected_) {
-    for (int j = MAX_POS; j < last_scan_->ranges.size(); j++) {
-      if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
-        last_scan_->ranges[j] < OBSTACLE_DISTANCE)
-      {
-        detected_ = true;
-        object_position_ = j;
-        break;
-      }
+  for (int j = MAX_POS; j < last_scan_->ranges.size(); j++) {
+    if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
+      last_scan_->ranges[j] < OBSTACLE_DISTANCE)
+    {
+      detected_ = true;
+      object_position_[n] = last_scan_->ranges[j];
     }
-  }
-
-
-  if (MAX_POS < object_position_) {
-    /*TURNING_LEFT*/
-    side_ = 1;
-  } else {
-    /*TURNING_RIGTH;*/
-    side_ = -1;
+    object_position_[n] = 1e9;
+    n++;
   }
 
   return detected_;
+}
+
+int
+AvoidObstacle::obstacle_side()
+{
+  int n;
+  int side;
+
+  for (int j = 0; j < LEN_MEDS; j++) {
+    if (object_position_[j] < object_position_[n]) {
+      n = j;
+    }
+  }
+
+  if (n < MIN_POS) {
+    side = -1;
+  } else {
+    side = 1;
+  }
+
+  return side;
 }
 
 bool

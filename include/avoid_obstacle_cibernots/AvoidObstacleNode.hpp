@@ -46,7 +46,6 @@ private:
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
   void control_cycle();
 
-
   static const int FORWARD = 0;
   static const int TURN = 1;
   static const int STOP = 2;
@@ -54,8 +53,9 @@ private:
   static const int ARCH = 4;
   static const int MAX_POS = 320;
   static const int MIN_POS = 40;
+  static const int LEN_MEDS = 80;
   int side_ = 1;  // 1(izq) o -1(der)
-  int object_position_;
+  int object_position_[LEN_MEDS];
   int state_;
   int last_state_;
   rclcpp::Time state_ts_;
@@ -65,6 +65,7 @@ private:
   bool check_forward_2_stop();
   bool check_turn_2_arch();
   bool check_stop_2_forward();
+  int obstacle_side();
   bool check_reor_2_forward();
   bool check_arch_2_reor();
   bool check_arch_2_turn();
