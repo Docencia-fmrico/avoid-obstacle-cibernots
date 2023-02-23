@@ -42,26 +42,26 @@ private:
 
   // Callback bumper event (stop if bumper is pressed)
   void bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg);
-  
+
   // Callback button event (start and stop if button is pressed)
   void button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg);
-  
+
   // Callback scan event (get the last scan)
   void scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg);
-  
+
   // Timer callback (control the robot)
   void control_cycle();
-  
+
   // Constant max and min range of the laser
   static const int MAX_POS = 320;
   static const int MIN_POS = 40;
   
   // Constant amplitude of values of the laser
   static const int LEN_MEDS = 80;
-  
+
   // Side of rotation
   int side_ = 1;  // 1(izq) o -1(der)
-  
+
   // Array of values of the laser
   int object_position_[LEN_MEDS];
 
@@ -74,10 +74,10 @@ private:
 
   // State of the robot
   int state_;
-  
+
   // Last state of the robot
   int last_state_;
-  
+
   // Time since the last state change
   rclcpp::Time state_ts_;
 
@@ -86,22 +86,22 @@ private:
 
   // Check forward to turn (if there is an obstacle)
   bool check_forward_2_turn();
-  
+
   // Check forward to stop (if there is not laser data)
   bool check_forward_2_stop();
-  
+
   // Check turn to arch (if the robot has rotated 90 degrees)
   bool check_turn_2_arch();
-  
+
   // Check stop to forward (if the robot has laser data)
   bool check_stop_2_forward();
-  
+
   // Check reorientation to forward (if the robot has rotated 90 degrees)
   bool check_reor_2_forward();
-  
+
   // Check arch to reorientation (if the robot has finished the arch)
   bool check_arch_2_reor();
-  
+
   // Check arch to turn (if there is an obstacle while the robot is doing the arch)
   bool check_arch_2_turn();
 

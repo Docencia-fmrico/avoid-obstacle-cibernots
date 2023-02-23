@@ -25,7 +25,7 @@ def generate_launch_description():
 
     # Get the launch directory
     pkg_dir = get_package_share_directory('avoid_obstacle_cibernots')
-    
+
     # Get the path to the param file
     param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
 

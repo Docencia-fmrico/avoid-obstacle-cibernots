@@ -120,7 +120,6 @@ AvoidObstacle::control_cycle()
 
   // If the button is pressed, the robot will start moving
   if (pressed_) {
-
     // Create messages
     geometry_msgs::msg::Twist out_vel;
     kobuki_ros_interfaces::msg::Led out_led;
@@ -239,7 +238,6 @@ AvoidObstacle::check_forward_2_turn()
       // Save the distances of the obstacle
       object_position_[n] = last_scan_->ranges[j];
     } else {
-
       // Do not save the distances of the obstacle
       object_position_[n] = 1e9;
     }

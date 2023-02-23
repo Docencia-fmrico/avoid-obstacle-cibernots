@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 
   // Create node
   auto avoid_obs_node = std::make_shared<avoid_obstacle_cibernots::AvoidObstacle>();
-  
+
   // Run the executor
   rclcpp::spin(avoid_obs_node);
 
