@@ -23,9 +23,13 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+    # Get the launch directory
     pkg_dir = get_package_share_directory('avoid_obstacle_cibernots')
+    
+    # Get the path to the param file
     param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
 
+    # Node configuration
     avoidobs_cmd = Node(package='avoid_obstacle_cibernots',
                         executable='avoid_obs',
                         output='screen',
@@ -39,7 +43,10 @@ def generate_launch_description():
                             ('output_led', '/commands/led1')
                         ])
 
+    # Create the launch description
     ld = LaunchDescription()
+
+    # Add the action to the launch description
     ld.add_action(avoidobs_cmd)
 
     return ld

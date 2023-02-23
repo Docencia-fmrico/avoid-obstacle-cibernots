@@ -19,12 +19,16 @@
 
 int main(int argc, char * argv[])
 {
+  // Initialize
   rclcpp::init(argc, argv);
 
+  // Create node
   auto avoid_obs_node = std::make_shared<avoid_obstacle_cibernots::AvoidObstacle>();
+  
+  // Run the executor
   rclcpp::spin(avoid_obs_node);
 
+  // Shutdown and exit
   rclcpp::shutdown();
-
   return 0;
 }

@@ -5,8 +5,5 @@ avoid_obstacle:
     OBSTACLE_DISTANCE: 0.5
     MULTIP_ARCH: 3.2
     MULTIP_TURN: 1.5
-    
-    # state_: 0
-    # last_state_: 0
-
+  
     use_sim_time: False

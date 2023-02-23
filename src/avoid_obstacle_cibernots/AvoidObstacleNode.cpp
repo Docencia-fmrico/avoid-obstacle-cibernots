@@ -38,6 +38,7 @@ AvoidObstacle::AvoidObstacle()
   last_state_(FORWARD),
   pressed_(false)
 {
+  // Declare and read parameters
   declare_parameter("SPEED_LINEAR", 0.0f);
   declare_parameter("SPEED_ANGULAR", 0.0f);
   declare_parameter("OBSTACLE_DISTANCE", 0.0f);
@@ -50,6 +51,7 @@ AvoidObstacle::AvoidObstacle()
   get_parameter("MULTIP_ARCH", MULTIP_ARCH);
   get_parameter("MULTIP_TURN", MULTIP_TURN);
 
+  // Create subscription and publishers
   scan_sub_ = create_subscription<sensor_msgs::msg::LaserScan>(
     "input_scan", rclcpp::SensorDataQoS(),
     std::bind(&AvoidObstacle::scan_callback, this, _1));
@@ -66,17 +68,21 @@ AvoidObstacle::AvoidObstacle()
   sound_pub_ = create_publisher<kobuki_ros_interfaces::msg::Sound>("output_sound", 10);
   led_pub_ = create_publisher<kobuki_ros_interfaces::msg::Led>("output_led", 10);
 
+  // Create timer
   timer_ = create_wall_timer(50ms, std::bind(&AvoidObstacle::control_cycle, this));
 
+  // Turn ecuations
   t_arch = ((M_PI_2 * M_PI * SPEED_LINEAR) / SPEED_ANGULAR) * MULTIP_ARCH;
   t_turn_90d = (M_PI_2 / SPEED_ANGULAR) * MULTIP_TURN;
 
+  // Time conversions
   TURNING_TIME = rclcpp::Duration::from_seconds(t_turn_90d);
   REORENTATION_TIME = rclcpp::Duration::from_seconds(t_turn_90d * 0.85);
 
   state_ts_ = now();
 }
 
+// Callback bumper
 void
 AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg)
 {
@@ -86,7 +92,7 @@ AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePt
   sound_pub_->publish(out_sound);
 }
 
-
+// Callback button
 void
 AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg)
 {
@@ -96,13 +102,14 @@ AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePt
   }
 }
 
-
+// Callback scan
 void
 AvoidObstacle::scan_callback(sensor_msgs::msg::LaserScan::UniquePtr msg)
 {
   last_scan_ = std::move(msg);
 }
 
+// Control cycle
 void
 AvoidObstacle::control_cycle()
 {
@@ -111,17 +118,23 @@ AvoidObstacle::control_cycle()
     return;
   }
 
+  // If the button is pressed, the robot will start moving
   if (pressed_) {
+
+    // Create messages
     geometry_msgs::msg::Twist out_vel;
     kobuki_ros_interfaces::msg::Led out_led;
 
+    // Set led color
     out_led.value = kobuki_ros_interfaces::msg::Led::BLACK;
 
+    // State machine
     switch (state_) {
       case FORWARD:
         out_vel.linear.x = SPEED_LINEAR;
         out_vel.angular.z = 0.0f;
 
+        // If ther is not scan data, the robot will stop
         if (check_forward_2_stop()) {
           out_vel.linear.x = 0.0f;
           RCLCPP_INFO(get_logger(), "FORWARD -> STOP");
@@ -129,6 +142,7 @@ AvoidObstacle::control_cycle()
           go_state(STOP);
         }
 
+        // If the robot detects an obstacle, it will turn
         if (check_forward_2_turn()) {
           RCLCPP_INFO(get_logger(), "FORWARD -> TURN");
           linear_distance = 0.0;
@@ -141,7 +155,7 @@ AvoidObstacle::control_cycle()
         out_vel.linear.x = 0.0f;
         out_vel.angular.z = SPEED_ANGULAR * side_;
 
-        // Una vez gira los 90º procede a avanzar en arco
+        // When the robot has turned 90 degrees, it will do the arch
         if (check_turn_2_arch()) {
           RCLCPP_INFO(get_logger(), "TURNING -> ARCH");
           last_state_ = TURN;
@@ -154,6 +168,7 @@ AvoidObstacle::control_cycle()
         out_vel.linear.x = 0.0f;
         out_vel.angular.z = 0.0f;
 
+        // If there is scan data, the robot will go to forward state
         if (check_stop_2_forward()) {
           RCLCPP_INFO(get_logger(), "STOP -> FORWARD");
           go_state(FORWARD);
@@ -164,7 +179,7 @@ AvoidObstacle::control_cycle()
         out_vel.linear.x = 0.0f;
         out_vel.angular.z = SPEED_ANGULAR * side_;
 
-        // Una vez se reorienta procede a avanzar
+        // When the robot finishes the reorientation, it will go to forward state
         if (check_reor_2_forward()) {
           RCLCPP_INFO(get_logger(), "REOR -> FORWARD");
           last_state_ = REOR;
@@ -175,16 +190,19 @@ AvoidObstacle::control_cycle()
       case ARCH:
         out_led.value = kobuki_ros_interfaces::msg::Led::RED;
 
+        // Calculate the linear distance
         linear_distance = SPEED_LINEAR * (now() - state_ts_).seconds();
         out_vel.linear.x = SPEED_LINEAR;
         out_vel.angular.z = -SPEED_ANGULAR * side_;
 
+        // If the robot has done the arch, it will go to reorientation state
         if (check_arch_2_reor()) {
           last_state_ = ARCH;
           go_state(REOR);
           break;
         }
 
+        // If the robot detects an obstacle while doing the arch, it will turn
         if (check_arch_2_turn()) {
           RCLCPP_INFO(get_logger(), "ARCH -> TURN");
           last_state_ = ARCH;
@@ -210,18 +228,26 @@ AvoidObstacle::check_forward_2_turn()
   bool detected_ = false;
   int n = 0;
 
+  // Check if there is an obstacle in the front, less than parameter OBSTACLE_DISTANCE
+  // Range of the laser is from 0 to MIN_POS (RIGHT SIDE)
   for (int j = 0; j < MIN_POS; j++) {
     if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
       last_scan_->ranges[j] < OBSTACLE_DISTANCE)
     {
       detected_ = true;
+
+      // Save the distances of the obstacle
       object_position_[n] = last_scan_->ranges[j];
     } else {
+
+      // Do not save the distances of the obstacle
       object_position_[n] = 1e9;
     }
     n++;
   }
 
+  // Check if there is an obstacle in the front, less than parameter OBSTACLE_DISTANCE
+  // Range of the laser is from MAX_POS to 360 (LEFT SIDE)
   for (int j = MAX_POS; j < last_scan_->ranges.size(); j++) {
     if (!std::isinf(last_scan_->ranges[j]) && !std::isnan(last_scan_->ranges[j]) &&
       last_scan_->ranges[j] < OBSTACLE_DISTANCE)
@@ -233,6 +259,8 @@ AvoidObstacle::check_forward_2_turn()
     }
     n++;
   }
+
+  // Set the side of rotation if detected
   if (detected_) {
     side_ = obstacle_side();
   }
@@ -240,6 +268,7 @@ AvoidObstacle::check_forward_2_turn()
   return detected_;
 }
 
+// Set the side of rotation (depends on the position of the obstacle, left or right)
 int
 AvoidObstacle::obstacle_side()
 {
