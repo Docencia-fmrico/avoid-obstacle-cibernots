@@ -69,20 +69,21 @@ private:
   bool check_arch_2_reor();
   bool check_arch_2_turn();
 
-  float SPEED_LINEAR = 0;
-  float SPEED_ANGULAR = 0;
-  float OBSTACLE_DISTANCE = 0;
+  float SPEED_LINEAR = 0.0f;
+  float SPEED_ANGULAR = 0.0f;
+  float OBSTACLE_DISTANCE = 0.0f;
 
-  float MULTIP_ARCH = 0;
-  float MULTIP_TURN = 0;
+  float MULTIP_ARCH = 0.0f;
+  float MULTIP_TURN = 0.0f;
 
-  double t_arch = ((M_PI_2 * M_PI * SPEED_LINEAR) / SPEED_ANGULAR) * MULTIP_ARCH;
-  float t_turn_90d = (M_PI_2 / SPEED_ANGULAR) * MULTIP_TURN;
+  double t_arch;
+  float t_turn_90d;
 
   double linear_distance = 0.0;
 
   rclcpp::Duration TURNING_TIME = rclcpp::Duration::from_seconds(t_turn_90d);
   rclcpp::Duration REORENTATION_TIME = rclcpp::Duration::from_seconds(t_turn_90d * 0.85);
+
   const rclcpp::Duration SCAN_TIMEOUT {1s};
 
   rclcpp::Subscription<kobuki_ros_interfaces::msg::ButtonEvent>::SharedPtr button_sub_;

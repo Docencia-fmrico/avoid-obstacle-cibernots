@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <utility>
+#include <chrono>
+
 #include "avoid_obstacle_cibernots/AvoidObstacleNode.hpp"
 
 #include "sensor_msgs/msg/laser_scan.hpp"
@@ -66,6 +68,12 @@ AvoidObstacle::AvoidObstacle()
 
   timer_ = create_wall_timer(50ms, std::bind(&AvoidObstacle::control_cycle, this));
 
+  t_arch = ((M_PI_2 * M_PI * SPEED_LINEAR) / SPEED_ANGULAR) * MULTIP_ARCH;
+  t_turn_90d = (M_PI_2 / SPEED_ANGULAR) * MULTIP_TURN;
+
+  TURNING_TIME = rclcpp::Duration::from_seconds(t_turn_90d);
+  REORENTATION_TIME = rclcpp::Duration::from_seconds(t_turn_90d * 0.85);
+
   state_ts_ = now();
 }
 
@@ -82,7 +90,11 @@ AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePt
 void
 AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg)
 {
-  pressed_ = true;
+  if (msg->state == kobuki_ros_interfaces::msg::ButtonEvent::PRESSED)
+  {
+    RCLCPP_INFO(get_logger(), "BUTTON PRESSED");
+    pressed_ = !pressed_;
+  }
 }
 
 
