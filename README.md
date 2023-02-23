@@ -62,7 +62,7 @@ The finit state machine consists of 6 states: Forward, Turn, Stop, Reor and Arch
 *Stop*: Stop state. If no readings are received from the laser, the robot stops until readings are received again, in which case it will jump to the *Forward* state.
 
 A video of the operation of the robot with the finite state machine implemented is attached below:
-[Video 1](https://urjc-my.sharepoint.com/:v:/g/personal/da_quinga_2020_alumnos_urjc_es/EVzN7Xe43xxArq__mGFdy_4B9yuPPSlcPpkyF0HMEDuCLw?e=yFzh2u)
+[Video](https://urjc-my.sharepoint.com/:v:/g/personal/da_quinga_2020_alumnos_urjc_es/EVzN7Xe43xxArq__mGFdy_4B9yuPPSlcPpkyF0HMEDuCLw?e=weMXAx)
 
 ## Lidar logic
 
