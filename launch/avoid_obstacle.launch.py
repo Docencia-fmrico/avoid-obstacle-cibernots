@@ -31,12 +31,12 @@ def generate_launch_description():
                         output='screen',
                         parameters=[param_file],
                         remappings=[
-                          ('input_scan', '/scan_filtered'),
-                          ('output_vel', '/cmd_vel'),
-                          ('input_button', '/events/button'),
-                          ('input_bumper', '/events/bumper'),
-                          ('output_sound', '/commands/sound'),
-                          ('output_led', '/commands/led1')
+                            ('input_scan', '/scan_filtered'),
+                            ('output_vel', '/cmd_vel'),
+                            ('input_button', '/events/button'),
+                            ('input_bumper', '/events/bumper'),
+                            ('output_sound', '/commands/sound'),
+                            ('output_led', '/commands/led1')
                         ])
 
     ld = LaunchDescription()
