@@ -41,7 +41,7 @@ ros2 launch avoid_obstacle_cibernots avoid_obstacle.launch.py  # avoid_obstacle_
 ## AvoidObstacleNode
 
 ## Finit State Machine
-The finit state machine consists of 6 states: Forward, Turn, Stop, Reor and Arch.
+The finit state machine consists of 5 states: Forward, Turn, Stop, Reor and Arch.
 
 *Forward*: straight ahead state. If no measurements are received from the laser, it jumps to the *Stop* state. On the other hand, if an obstacle is detected by the use of the laser, it jumps to the *Turn* state.
 
