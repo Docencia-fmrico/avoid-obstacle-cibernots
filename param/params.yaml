@@ -1,0 +1,9 @@
+avoid_obstacle:
+  ros__parameters:
+    SPEED_LINEAR: 0.3
+    SPEED_ANGULAR: 0.6
+    OBSTACLE_DISTANCE: 0.5
+    MULTIP_ARCH: 3.2
+    MULTIP_TURN: 1.5
+  
+    use_sim_time: False
