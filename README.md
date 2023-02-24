@@ -1,9 +1,5 @@
 # Avoid_obstacle_cibernots
 
-<div align="center">
-<img width=400px src="?raw=true" alt="explode"></a>
-</div>
-
 <h3 align="center">Avoid Obstacle </h3>
 
 <div align="center">
@@ -26,10 +22,6 @@
 
 
 ## How to execute the programs
-
-<div align="center">
-<img width=600px src="?raw=true" alt="explode"></a>
-</div>
 
 First connect the base and the lidar then :
 -----------------------------------------------------------------------
@@ -129,6 +121,7 @@ Snippet (launch example):
 ## avoid_obstacle.launch.py
 
 # Get the path to the param file
+pkg_dir = get_package_share_directory('avoid_obstacle_cibernots')
 param_file = os.path.join(pkg_dir, 'param', 'params.yaml')
 
 # Node configuration
@@ -190,30 +183,78 @@ install(DIRECTORY param DESTINATION share/${PROJECT_NAME})
 
 
 ### Led Implement
+To see that the robot is in the "arc" state, a red LED lights up and in the "stop" state it lights up orange. In any other case it remains off.
 
 -----------------------------------------------------------------------
 Snippet(Led Implement):
 ``` cpp
+// constructor
+led_pub_ = create_publisher<kobuki_ros_interfaces::msg::Led>("output_led", 10);
 
+// case arc
+out_led.value = kobuki_ros_interfaces::msg::Led::RED;
+
+// case stop
+out_led.value = kobuki_ros_interfaces::msg::Led::ORANGE;
+
+led_pub_->publish(out_led);
 ```
 -----------------------------------------------------------------------
 ### Sound Implement
+In case of an emergency stop, i.e. the bumper is pressed, the robot stops and emits a sound.
+snippet(sound implement):
+```cpp
+// constructor
+sound_pub_ = create_publisher<kobuki_ros_interfaces::msg::Sound>("output_sound", 10);
 
-
+// in bumperCallback
+kobuki_ros_interfaces::msg::Sound out_sound;
+out_sound.value = kobuki_ros_interfaces::msg::Sound::ERROR;
+sound_pub_->publish(out_sound);
+```
 
 -----------------------------------------------------------------------
 ### Bumper Implement
+If the bumper is pressed, it is considered that the laser has not detected any obstacle but there is one and therefore the boolean "pressed_" that controls whether or not to enter the state machine is set to false, which would stop the robot.
+
 Snippet(bumper Implement):
 ``` cpp
+// constructor
+bumper_sub_ = create_subscription<kobuki_ros_interfaces::msg::BumperEvent>(
+    "input_bumper", rclcpp::SensorDataQoS(),
+    std::bind(&AvoidObstacle::bumper_callback, this, _1));
 
+// Callback bumper
+void
+AvoidObstacle::bumper_callback(kobuki_ros_interfaces::msg::BumperEvent::UniquePtr msg)
+{
+  pressed_ = false;
+  .
+  .
+  .
+}
 ```
+
 -----------------------------------------------------------------------
+### Button Implement
+Si se pulsa un botón, "pressed_" que controla si se entra en la máquina de estados o no se pone a false o a true dependiendo del estado anterior. Siempre se pone al contrario del estado anterior.
+Al empezar la ejecución "pressed_ = false" y hasta que no se pulsa el boton no comienza a moverse el robot. Al arrancar, basta con volver a pulsar el botón para parar el robot y este seguiría con el último estado registrado.
+```cpp
+// constructor
+button_sub_ = create_subscription<kobuki_ros_interfaces::msg::ButtonEvent>(
+  "input_button", rclcpp::SensorDataQoS(),
+  std::bind(&AvoidObstacle::button_callback, this, _1));
 
-
-## Tests
-
-
-## Continuous integration
+// Callback button
+void
+AvoidObstacle::button_callback(kobuki_ros_interfaces::msg::ButtonEvent::UniquePtr msg)
+{
+  if (msg->state == kobuki_ros_interfaces::msg::ButtonEvent::PRESSED) {
+    RCLCPP_INFO(get_logger(), "BUTTON PRESSED");
+    pressed_ = !pressed_;
+  }
+}
+```
 
 
 ## license 
